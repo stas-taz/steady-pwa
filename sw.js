@@ -1,9 +1,12 @@
 // Steady — Service Worker
-// Навигация (index.html) — Network-First: при онлайне всегда свежая версия,
-// оффлайн — из кэша. Остальные ресурсы — Cache-First для 100% оффлайна.
-// Обновите CACHE_VERSION при изменении ресурсов, чтобы инвалидировать кэш.
+// Стратегии:
+//   • Навигация (index.html) — Network-First: при онлайне всегда свежая версия, оффлайн — кэш.
+//   • Ресурсы (иконки, ассеты, манифест) — Stale-While-Revalidate: мгновенно из кэша,
+//     свежая версия подтягивается в фоне. Поэтому CACHE_VERSION больше НЕ нужно
+//     поднимать вручную при каждом деплое — обновления приходят сами.
+// CACHE_VERSION используется только для очистки старых кэшей.
 
-const CACHE_VERSION = 'steady-v9';
+const CACHE_VERSION = 'steady-v10';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 const PRECACHE = [
@@ -72,21 +75,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Остальное: Cache-First.
+  // Ресурсы: Stale-While-Revalidate (мгновенно из кэша + фоновое обновление).
   event.respondWith(
     caches.match(request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(request)
+      const network = fetch(request)
         .then((response) => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
+          if (response && response.status === 200 && response.type === 'basic') {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           }
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           return response;
         })
-        .catch(() => new Response('Offline', { status: 503, statusText: 'Offline' }));
+        .catch(() => cached || new Response('Offline', { status: 503, statusText: 'Offline' }));
+
+      return cached || network;
     })
   );
 });
