@@ -2,7 +2,7 @@
 // Обеспечивает 100% оффлайн-работу после первого открытия.
 // Обновите CACHE_VERSION при изменении ресурсов, чтобы инвалидировать кэш.
 
-const CACHE_VERSION = 'steady-v2';
+const CACHE_VERSION = 'steady-v3';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 // Статические ресурсы, которые кэшируются при установке.
@@ -14,7 +14,16 @@ const PRECACHE = [
   './manifest.webmanifest',
   './icons/apple-touch-icon.png',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './assets/icon_1.png',
+  './assets/icon_2.png',
+  './assets/icon_3.png',
+  './assets/icon_4.png',
+  './assets/icon_5.png',
+  './assets/icon_6.png',
+  './assets/icon_7.png',
+  './assets/icon_8.png',
+  './assets/icon_9.png',
 ];
 
 self.addEventListener('install', (event) => {
