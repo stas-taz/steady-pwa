@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steady — Privacy Policy</title>
+  <meta name="description" content="Steady privacy policy: 100% on-device, zero data collected, no servers, no accounts, no analytics." />
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --ink: #1d1d1f;
+      --muted: #6e6e73;
+      --accent: #007aff;
+      --line: #d2d2d7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      padding: 20px 16px;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 20px; letter-spacing: -0.02em;
+    }
+    .brand .logo {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--accent); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .lang-switch { display: flex; gap: 8px; margin-top: 14px; }
+    .lang-switch button {
+      border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+      border-radius: 20px; padding: 6px 16px; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .lang-switch button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    main { padding: 28px 0 60px; }
+    .card {
+      background: var(--surface); border-radius: 16px; padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 20px;
+    }
+    h1 { font-size: 26px; letter-spacing: -0.02em; margin: 0 0 6px; }
+    h2 { font-size: 18px; margin: 22px 0 8px; }
+    p, li { color: var(--muted); }
+    .updated { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .notice {
+      border-left: 4px solid var(--accent); background: #f0f7ff;
+      padding: 14px 16px; border-radius: 8px; margin: 18px 0;
+    }
+    .notice strong { color: var(--ink); }
+    a { color: var(--accent); text-decoration: none; }
+    [data-lang] { display: none; }
+    [data-lang].active { display: block; }
+    footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 16px 40px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="brand"><span class="logo">S</span> Steady</div>
+      <div class="lang-switch">
+        <button id="btn-en" class="active" onclick="setLang('en')">English</button>
+        <button id="btn-ru" onclick="setLang('ru')">Русский</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ENGLISH -->
+    <div data-lang="en" class="active">
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: November 23, 2026</p>
+
+      <div class="card">
+        <h2>Everything stays on your iPhone</h2>
+        <p>Steady is a personal GLP-1 and type 2 diabetes self-tracking journal. All of your data — injections, weight, glucose readings, symptoms, and notes — is stored <strong>locally on your device</strong> only.</p>
+        <ul>
+          <li><strong>Zero data collected.</strong> We do not collect, transmit, or receive any of your information.</li>
+          <li><strong>No accounts.</strong> There is no sign-up, no login, and no profile stored anywhere.</li>
+          <li><strong>No servers.</strong> Steady has no backend. Your data never leaves your iPhone.</li>
+          <li><strong>No analytics, no ads, no tracking SDKs.</strong> We do not use any third-party analytics, advertising, or tracking technology.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>What about purchases?</h2>
+        <p>Steady Pro is an optional subscription handled entirely by Apple through the App Store. Payment and billing are processed by Apple, not by us. We never see your payment details.</p>
+      </div>
+
+      <div class="notice">
+        <strong>Medical disclaimer.</strong> Steady is a personal self-tracking journal and is <strong>not a medical device</strong>. It does not diagnose, treat, or calculate medication doses. The medication-level curve is an illustrative estimate only. Always follow your doctor's prescription; dose adjustments must be made by a healthcare professional.
+      </div>
+
+      <div class="card">
+        <h2>Contact</h2>
+        <p>Questions about privacy? Contact us at <a href="mailto:support@steady-app.example.com">support@steady-app.example.com</a>.</p>
+      </div>
+    </div>
+
+    <!-- РУССКИЙ -->
+    <div data-lang="ru">
+      <h1>Политика конфиденциальности</h1>
+      <p class="updated">Последнее обновление: 23 ноября 2026 г.</p>
+
+      <div class="card">
+        <h2>Всё остаётся на вашем iPhone</h2>
+        <p>Steady — это личный дневник самоконтроля для курса GLP-1 и диабета 2-го типа. Все ваши данные — уколы, вес, глюкоза, симптомы и заметки — хранятся <strong>только локально на устройстве</strong>.</p>
+        <ul>
+          <li><strong>Ноль собираемых данных.</strong> Мы не собираем, не передаём и не получаем вашу информацию.</li>
+          <li><strong>Без аккаунтов.</strong> Нет регистрации, входа и профилей где-либо ещё.</li>
+          <li><strong>Без серверов.</strong> У Steady нет бэкенда. Ваши данные не покидают iPhone.</li>
+          <li><strong>Без аналитики, рекламы и трекинга.</strong> Мы не используем сторонние SDK аналитики, рекламы или отслеживания.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>А что насчёт покупок?</h2>
+        <p>Steady Pro — необязательная подписка, которую полностью обрабатывает Apple через App Store. Оплата и выставление счетов выполняются Apple, а не нами. Мы никогда не видим ваши платёжные данные.</p>
+      </div>
+
+      <div class="notice">
+        <strong>Медицинский дисклеймер.</strong> Steady — личный дневник самоконтроля и <strong>не является медицинским изделием</strong>. Приложение не ставит диагнозы, не лечит и не рассчитывает дозы. Кривая уровня препарата носит ориентировочный характер. Всегда следуйте назначению врача; корректировку дозировки должен выполнять медицинский специалист.
+      </div>
+
+      <div class="card">
+        <h2>Контакты</h2>
+        <p>Вопросы о конфиденциальности? Напишите на <a href="mailto:support@steady-app.example.com">support@steady-app.example.com</a>.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>© 2026 Steady. 100% on-device · no servers · no tracking.</footer>
+
+  <script>
+    function setLang(lang) {
+      document.querySelectorAll('[data-lang]').forEach(function (el) {
+        el.classList.toggle('active', el.getAttribute('data-lang') === lang);
+      });
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      document.getElementById('btn-ru').classList.toggle('active', lang === 'ru');
+    }
+    // Автоопределение языка
+    var pref = (navigator.language || 'en').toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en';
+    setLang(pref);
+  </script>
+</body>
+</html>
