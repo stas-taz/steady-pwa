@@ -1298,6 +1298,43 @@
     .preset-lbl { font-size:11px; font-weight:600; opacity:.7; }
     .preset-chip.is-active .preset-lbl { opacity:1; }
     .preset-num { font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+
+    /* ---- iOS native motion ---- */
+    :root { --ios-ease: cubic-bezier(0.32, 0.72, 0, 1); }
+    @keyframes iosFadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @keyframes iosSheetUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+    @keyframes iosSlideIn { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: none; } }
+    @keyframes backdropFade { from { opacity: 0; } to { opacity: 1; } }
+
+    #view.ios-enter > * { animation: iosFadeUp 190ms var(--ios-ease) both; }
+    #obCard.ios-enter > * { animation: iosFadeUp 190ms var(--ios-ease) both; }
+
+    .modal-bg { animation: backdropFade 220ms ease both; }
+    .modal-sheet { animation: iosSheetUp 280ms var(--ios-ease) both; }
+    .set-shell { animation: iosSlideIn 240ms var(--ios-ease) both; }
+
+    circle[stroke-dashoffset] { transition: stroke-dashoffset 420ms cubic-bezier(0.22, 1, 0.36, 1); }
+
+    .tab { transition: transform 120ms var(--ios-ease); }
+    .tab:active { transform: scale(0.92); }
+    .chip, .preset-chip, .primary-btn, .pill-btn {
+      transition: transform 120ms ease, background-color 180ms ease, border-color 180ms ease;
+    }
+    .chip:active, .preset-chip:active, .primary-btn:active, .pill-btn:active { transform: scale(0.96); }
+
+    .toast {
+      transform: translateX(-50%) translateY(-8px);
+      transition: opacity 220ms ease, transform 220ms var(--ios-ease);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1985,6 +2022,12 @@
       const literUnit = () => state.lang === "ru" ? "л" : "L";
       const fmtW = (kg) => (kg == null || isNaN(kg)) ? "—" : (state.usUnits ? (kg * 2.20462).toFixed(1) + " lbs" : kg.toFixed(1) + " " + wu());
       const fmtG = (mm) => (mm == null || isNaN(mm)) ? "—" : (state.usUnits ? Math.round(mm * 18) + " mg/dL" : mm.toFixed(1) + " " + gu());
+      function iosEnter(el) {
+        if (!el || !el.classList) return;
+        el.classList.remove("ios-enter");
+        void el.offsetWidth;
+        el.classList.add("ios-enter");
+      }
       function dateKicker() {
         try {
           return new Date().toLocaleDateString(LANG_LOCALES[state.lang] || "en-GB", { weekday: "short", day: "numeric", month: "short" });
@@ -2384,7 +2427,7 @@
                     <div class="ring-wrap">
                       <svg width="72" height="72" viewBox="0 0 72 72" style="transform:rotate(-90deg);display:block">
                         <circle cx="36" cy="36" r="${r}" fill="none" stroke="${track}" stroke-width="6.5"/>
-                        <circle cx="36" cy="36" r="${r}" fill="none" stroke="${strokeCol}" stroke-width="6.5" stroke-linecap="round" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${dashOff.toFixed(1)}" style="transition:stroke-dashoffset .25s ease"/>
+                        <circle cx="36" cy="36" r="${r}" fill="none" stroke="${strokeCol}" stroke-width="6.5" stroke-linecap="round" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${dashOff.toFixed(1)}" style="transition:stroke-dashoffset 420ms cubic-bezier(0.22,1,0.36,1)"/>
                       </svg>
                       <div class="ring-center">
                         <span class="ring-pct" style="font-size:14.5px;${done ? "color:var(--green)" : ""}">${done ? "✓" : pct + "%"}</span>
@@ -3625,8 +3668,8 @@
         const preset = e.target.closest("[data-preset-time]");
         if (preset && preset.dataset.presetTime !== "custom") { state.reminderTime = preset.dataset.presetTime; saveState(); render(); window.haptic && window.haptic(); return; }
         if (e.target.id === "obRemindBtn") { state.remindEnabled = !state.remindEnabled; render(); return; }
-        if (e.target.closest("#obNextBtn")) { state.obStep = Math.min(3, state.obStep + 1); render(); return; }
-        if (e.target.closest("#obBackBtn")) { state.obStep = Math.max(0, state.obStep - 1); render(); return; }
+        if (e.target.closest("#obNextBtn")) { state.obStep = Math.min(3, state.obStep + 1); render(); iosEnter($("#obCard")); return; }
+        if (e.target.closest("#obBackBtn")) { state.obStep = Math.max(0, state.obStep - 1); render(); iosEnter($("#obCard")); return; }
         if (e.target.id === "obFinishBtn") {
           state.onboarded = true;
           render();
@@ -3651,7 +3694,14 @@
           return;
         }
         const tab = e.target.closest("[data-tab]");
-        if (tab) { state.tab = tab.dataset.tab; render(); return; }
+        if (tab) {
+          const _nt = tab.dataset.tab;
+          const _changed = _nt !== state.tab;
+          state.tab = _nt;
+          render();
+          if (_changed) iosEnter($("#view"));
+          return;
+        }
 
         const macro = e.target.closest("[data-macro]");
         if (macro) {
