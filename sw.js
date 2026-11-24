@@ -3,7 +3,7 @@
 // оффлайн — из кэша. Остальные ресурсы — Cache-First для 100% оффлайна.
 // Обновите CACHE_VERSION при изменении ресурсов, чтобы инвалидировать кэш.
 
-const CACHE_VERSION = 'steady-v8';
+const CACHE_VERSION = 'steady-v9';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 const PRECACHE = [
