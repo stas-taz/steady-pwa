@@ -1985,7 +1985,7 @@ const I18N = {"ru":{"billing_error":"Ошибка оплаты","billing_cancell
       const fmtG = (mm) => (mm == null || isNaN(mm)) ? "—" : (state.usUnits ? Math.round(mm * 18) + " mg/dL" : mm.toFixed(1) + " " + gu());
 
       // --- Telegram Stars billing ---
-      const BILLING_API_URL = ""; // вставьте URL Cloudflare Worker после деплоя
+      const BILLING_API_URL = "https://steady-billing.stas-taz.workers.dev";
       const XTR_PRICES = { month: 100, year: 600, life: 1000 };
       const USD_EQUIV = { month: "$1.99", year: "$11.99", life: "$19.99" };
       function billingEnabled() {

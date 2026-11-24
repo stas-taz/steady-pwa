@@ -2,7 +2,7 @@
 // Обеспечивает 100% оффлайн-работу после первого открытия.
 // Обновите CACHE_VERSION при изменении ресурсов, чтобы инвалидировать кэш.
 
-const CACHE_VERSION = 'steady-v6';
+const CACHE_VERSION = 'steady-v7';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 // Статические ресурсы, которые кэшируются при установке.
