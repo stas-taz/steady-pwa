@@ -1988,11 +1988,40 @@ const I18N = {"ru":{"billing_error":"Ошибка оплаты","billing_cancell
       const BILLING_API_URL = "https://steady-billing.stas-taz.workers.dev";
       const XTR_PRICES = { month: 100, year: 600, life: 1000 };
       const USD_EQUIV = { month: "$1.99", year: "$11.99", life: "$19.99" };
+      function tgInitData() {
+        const wa = window.Telegram && window.Telegram.WebApp;
+        if (wa && wa.initData) return wa.initData;
+        try {
+          const m = (location.hash || "").match(/[#&]tgWebAppData=([^&]*)/);
+          if (m) return decodeURIComponent(m[1]);
+        } catch (e) {}
+        return "";
+      }
+      let __invoiceCb = null;
+      window.addEventListener("message", function (e) {
+        let data = e.data;
+        try { if (typeof data === "string") data = JSON.parse(data); } catch (err) {}
+        if (data && data.eventType === "invoice_closed" && __invoiceCb) {
+          const cb = __invoiceCb; __invoiceCb = null;
+          cb(data.status);
+        }
+      });
+      function tgOpenInvoice(url, cb) {
+        const wa = window.Telegram && window.Telegram.WebApp;
+        if (wa && wa.openInvoice) { wa.openInvoice(url, cb); return true; }
+        if (window.TelegramWebviewProxy && window.TelegramWebviewProxy.postEvent) {
+          __invoiceCb = cb;
+          window.TelegramWebviewProxy.postEvent("web_app_open_invoice", JSON.stringify({ slug: url }));
+          return true;
+        }
+        cb("failed");
+        return false;
+      }
       function billingEnabled() {
-        return !!BILLING_API_URL && !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData);
+        return !!BILLING_API_URL && !!tgInitData();
       }
       async function billingFetch(path, body) {
-        const initData = window.Telegram.WebApp.initData;
+        const initData = tgInitData();
         const opts = {
           method: body ? "POST" : "GET",
           headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": initData },
@@ -2018,7 +2047,7 @@ const I18N = {"ru":{"billing_error":"Ошибка оплаты","billing_cancell
         try {
           const data = await billingFetch("/api/create-invoice", { plan });
           if (!data || !data.invoiceUrl) { showToast(t("billing_error")); return; }
-          window.Telegram.WebApp.openInvoice(data.invoiceUrl, (status) => {
+          tgOpenInvoice(data.invoiceUrl, (status) => {
             if (status === "paid") {
               state.isPro = true;
               state.proPlan = plan;
@@ -3767,7 +3796,12 @@ const I18N = {"ru":{"billing_error":"Ошибка оплаты","billing_cancell
         if (pp) { state.selectedPlan = pp.dataset.proPlan; renderProModal(); saveState(); return; }
         if (e.target.id === "buyProBtn") {
           if (billingEnabled()) { buyProWithTelegramStars(state.selectedPlan); return; }
-          state.isPro = true; $("#proModal").hidden = true; showToast(t("toast_pro")); render(); return;
+          const tg = window.Telegram && window.Telegram.WebApp;
+          if (!BILLING_API_URL) { showToast("⚠️ billing: API URL пуст — закройте и откройте Mini App"); return; }
+          if (!tg) { showToast("⚠️ billing: Telegram SDK не загрузился"); return; }
+          if (!tgInitData()) { showToast("⚠️ billing: нет initData — откройте через кнопку Open Steady"); return; }
+          showToast("⚠️ billing: неизвестная ошибка");
+          return;
         }
         if (e.target.id === "restoreProBtn") { showToast(t("toast_purchases")); return; }
         const sl = e.target.closest("[data-set-lang]");
