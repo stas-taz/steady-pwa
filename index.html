@@ -1540,7 +1540,6 @@
     .pro-badge { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: #34C759; color: #fff; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; box-shadow: 0 3px 8px rgba(52,199,89,0.28); white-space: nowrap; }
     .pro-strike { font-size: 11px; color: var(--muted); text-decoration: line-through; }
     .pro-foot { margin-top: 10px; font-size: 12px; color: #64748B; text-align: center; }
-    #closeProModal { width: 32px; height: 32px; padding: 0; justify-content: center; background: rgba(15,23,42,0.06); color: #475569; border: 0; font-size: 14px; }
 
     /* ---- Daily Essentials rings v2 ---- */
     .ring-box { position: relative; }
@@ -1588,6 +1587,7 @@
     .pw-row.active .pw-radio { border-color: #007AFF; background: #007AFF; }
     .pw-radio::after { content: ""; width: 8px; height: 8px; border-radius: 999px; background: #fff; transform: scale(0); transition: transform 180ms var(--ios-ease); }
     .pw-row.active .pw-radio::after { transform: scale(1); }
+    .pw-left, .pw-name, .pw-desc { text-align: left; }
     .pw-name { font-size: 16px; font-weight: 800; color: #0F172A; line-height: 1.2; }
     .pw-desc { font-size: 13px; color: #64748B; margin-top: 2px; font-weight: 500; }
     .pw-right { text-align: right; }
@@ -1615,11 +1615,11 @@
     :root[data-theme="dark"] .bmi-meta-box { background: #2C2C2E; }
     :root[data-theme="dark"] .bmi-meta-lbl { color: #AEAEB2; }
     :root[data-theme="dark"] .pw-sheet { background: radial-gradient(130% 44% at 50% 0%, rgba(10,132,255,0.24) 0%, rgba(28,28,30,0) 70%), #1C1C1E; }
-    :root[data-theme="dark"] .pw-close { background: rgba(255,255,255,0.12); color: #E5E7EB; }
+    :root[data-theme="dark"] .pw-close { background: rgba(255,255,255,0.11); color: rgba(255,255,255,0.8); }
     :root[data-theme="dark"] .pw-h1 { color: #FFFFFF; }
     :root[data-theme="dark"] .pw-h1 span { color: #0A84FF; }
     :root[data-theme="dark"] .pw-sub { color: #9CA3AF; }
-    :root[data-theme="dark"] .pw-preview { background: linear-gradient(180deg, rgba(44,44,46,0.92), rgba(28,28,30,0.88)); border-color: rgba(255,255,255,0.08); }
+    :root[data-theme="dark"] .pw-preview { background: linear-gradient(180deg, rgba(44,44,46,0.92), rgba(28,28,30,0.88)); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 10px 28px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.07); }
     :root[data-theme="dark"] .pw-prev-cap { color: #FFFFFF; }
     :root[data-theme="dark"] .pw-prev-cap span { color: #9CA3AF; }
     :root[data-theme="dark"] .pw-row { background: #2C2C2E; border-color: rgba(255,255,255,0.08); }
@@ -2113,8 +2113,18 @@
         const pct = Math.max(0, Math.min(100, Math.round(((firstW - lastW) / Math.max(0.1, firstW - state.targetWeightKg)) * 100)));
         const paperFormat = state.usUnits ? "US Letter" : "A4";
         const normRange = state.usUnits ? "72–126" : "4.0–7.0";
-        const silKey = state.silhouette === "female" ? "femaleFrontLine" : "maleFrontLine";
-        const silPath = PDF_SIL_PATHS[silKey] || "";
+        const _silKey = state.silhouette === "female" ? "femaleFrontLine" : "maleFrontLine";
+        const _lastIdx = state.lastSiteIdx % SITES.length;
+        const _lastSite = SITES[_lastIdx];
+        const _backSide = _lastSite && _lastSite.view === "back";
+        const silPath = _backSide
+          ? (state.silhouette === "female" ? SIL_PATHS.femFillBack : SIL_PATHS.maleBackFill)
+          : (PDF_SIL_PATHS[_silKey] || "");
+        const _mapMarkers = _backSide
+          ? [[_lastSite.cx, _lastSite.cy, 1], [SITES[_lastIdx === 6 ? 7 : 6].cx, SITES[_lastIdx === 6 ? 7 : 6].cy, 2]]
+              .map(([cx, cy, n]) => `<circle cx="${cx}" cy="${cy}" r="${n === 1 ? 14 : 13}" fill="${n === 1 ? "#005FCC" : "#FFF"}" stroke="#111827" stroke-width="2.5"/><text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="14" font-weight="700" fill="${n === 1 ? "#FFF" : "#111827"}">${n}</text>`).join("")
+          : [[204, 242, 4], [246, 242, 3], [255, 348, 2], [195, 348, 1]]
+              .map(([cx, cy, n]) => `<circle cx="${cx}" cy="${cy}" r="${n === 1 ? 14 : 13}" fill="${n === 1 ? "#005FCC" : "#FFF"}" stroke="#111827" stroke-width="2.5"/><text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="14" font-weight="700" fill="${n === 1 ? "#FFF" : "#111827"}">${n}</text>`).join("");
         const _siteOf = (off) => { const n = SITES.length; return siteName(SITES[((state.lastSiteIdx - off) % n + n) % n]); };
         const body = $("#pdfPreviewBody");
         const bwBtn = $("#togglePdfBwBtn");
@@ -2208,10 +2218,7 @@
                 <div style="font-size:6.8px;font-weight:700;text-transform:uppercase">${L.mapTitle}</div>
                 <svg viewBox="126 155 198 250" width="66" height="82" overflow="hidden" style="display:block;overflow:hidden">
                   <path d="${silPath}" fill="#1F2937" fill-rule="evenodd"/>
-                  <circle cx="204" cy="242" r="13" fill="#FFF" stroke="#111827" stroke-width="2.5"/><text x="204" y="247" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">4</text>
-                  <circle cx="246" cy="242" r="13" fill="#FFF" stroke="#111827" stroke-width="2.5"/><text x="246" y="247" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">3</text>
-                  <circle cx="255" cy="348" r="13" fill="#FFF" stroke="#111827" stroke-width="2.5"/><text x="255" y="353" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">2</text>
-                  <circle cx="195" cy="348" r="14" fill="#005FCC" stroke="#111827" stroke-width="2.5"/><text x="195" y="353" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">1</text>
+                  ${_mapMarkers}
                 </svg>
                 <div style="font-size:6.6px;font-weight:600;text-align:center">${L.mapCap}</div>
               </div>
