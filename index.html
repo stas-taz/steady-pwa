@@ -1351,15 +1351,28 @@
     .ob-step-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--surface); border: 1px solid var(--sep); color: var(--ink); font-size: 18px; font-weight: 600; line-height: 1; cursor: pointer; }
     .ob-inp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .ob-num-inp { width: 100%; height: 42px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--sep); background: var(--surface-2); font-size: 16.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
-    .bmi-track { position: relative; height: 10px; border-radius: 999px; display: grid; grid-template-columns: 18fr 28fr 24fr 30fr; gap: 3px; }
-    .bmi-seg { border-radius: 999px; height: 10px; }
+    .bmi-groove { padding: 3px; background: #ECEEF2; border-radius: 999px; box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08); position: relative; }
+    .bmi-track { position: relative; height: 14px; border-radius: 999px; overflow: hidden; display: flex; gap: 0; }
+    .bmi-seg { height: 14px; flex: 1 1 0; }
+    .bmi-seg:nth-child(1) { flex: 18 1 0; }
+    .bmi-seg:nth-child(2) { flex: 28 1 0; }
+    .bmi-seg:nth-child(3) { flex: 24 1 0; }
+    .bmi-seg:nth-child(4) { flex: 30 1 0; }
     .bmi-seg.is-a { background: #5AC8FA; }
     .bmi-seg.is-b { background: #34C759; }
     .bmi-seg.is-c { background: #FF9500; }
     .bmi-seg.is-d { background: #FF3B30; }
-    .bmi-marker { position: absolute; width: 18px; height: 18px; border-radius: 50%; top: -4px; margin-left: -9px; background: var(--surface); border: 3px solid var(--ink); transition: left 360ms var(--ios-ease); }
-    .bmi-target-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 1px; margin-left: -4px; background: var(--accent); transition: left 360ms var(--ios-ease); }
-    .bmi-ticks { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 5px; }
+    .bmi-overlay { position: absolute; inset: 3px; pointer-events: none; }
+    .bmi-marker { position: absolute; width: 20px; height: 20px; border-radius: 50%; top: 50%; margin-top: -10px; margin-left: -10px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.22); transition: left 360ms var(--ios-ease); z-index: 2; }
+    .bmi-target-dot { position: absolute; width: 10px; height: 10px; border-radius: 50%; top: 50%; margin-top: -5px; margin-left: -5px; background: #007AFF; transition: left 360ms var(--ios-ease); z-index: 1; }
+    .bmi-target-dot::before, .bmi-target-dot::after { content: ""; position: absolute; left: 50%; width: 1.5px; height: 5px; background: #007AFF; transform: translateX(-50%); }
+    .bmi-target-dot::before { top: -6px; }
+    .bmi-target-dot::after { bottom: -6px; }
+    .bmi-ruler { display: flex; align-items: flex-start; justify-content: space-between; margin-top: 6px; }
+    .bmi-tick-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bmi-tick { display: block; width: 1px; height: 5px; background: #CBD5E1; margin: 0 auto 4px; }
+    .bmi-tick.is-mini { height: 3px; margin-top: 1px; }
+    .bmi-tick-lbl { font-size: 10px; color: var(--muted); }
     .wave-info-btn { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); color: var(--accent); font-size: 12.5px; font-weight: 700; border: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
     /* ---- Onboarding v3 ---- */
@@ -2215,8 +2228,8 @@
             badge.textContent = t("ob_bmi_hint");
             badge.style.display = "inline-block";
             badge.style.color = "var(--muted)";
-            badge.style.background = "transparent";
-            badge.style.fontWeight = "500";
+            badge.style.background = "#F2F4F7";
+            badge.style.fontWeight = "600";
           }
         }
         if (bmi != null) {
@@ -2234,7 +2247,7 @@
         if (df) {
           if (!isNaN(w) && !isNaN(tw) && w > 0 && tw > 0) {
             const d = w - tw;
-            df.textContent = "Goal: " + (d === 0 ? "0.0" : (d > 0 ? "− " : "+ ") + Math.abs(d).toFixed(1)) + " " + unit;
+            df.textContent = "Goal: " + (d === 0 ? "0.0" : (d > 0 ? "−" : "+") + Math.abs(d).toFixed(1)) + " " + unit;
           } else df.textContent = "";
         }
       }
@@ -3428,15 +3441,29 @@
 
               <div class="ob-white-card">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
-                  <span id="obBmiTitle" style="font-size:14px;font-weight:800;letter-spacing:-.01em">BMI</span>
-                  <span id="obBmiBadge" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;display:none"></span>
+                  <span id="obBmiTitle" style="font-size:18px;font-weight:800;letter-spacing:-.01em">BMI</span>
+                  <span id="obBmiBadge" style="font-size:13px;font-weight:600;padding:4px 12px;border-radius:999px;display:none"></span>
                 </div>
-                <div class="bmi-track">
-                  <div class="bmi-seg is-a"></div><div class="bmi-seg is-b"></div><div class="bmi-seg is-c"></div><div class="bmi-seg is-d"></div>
-                  <div class="bmi-marker" id="obBmiMarker" style="left:50%;display:none"></div>
-                  <div class="bmi-target-dot" id="obBmiTargetDot" style="left:50%;display:none"></div>
+                <div class="bmi-groove">
+                  <div class="bmi-track">
+                    <div class="bmi-seg is-a"></div><div class="bmi-seg is-b"></div><div class="bmi-seg is-c"></div><div class="bmi-seg is-d"></div>
+                  </div>
+                  <div class="bmi-overlay">
+                    <div class="bmi-marker" id="obBmiMarker" style="left:50%;display:none"></div>
+                    <div class="bmi-target-dot" id="obBmiTargetDot" style="left:50%;display:none"></div>
+                  </div>
                 </div>
-                <div class="bmi-ticks"><span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span></div>
+                <div class="bmi-ruler">
+                  <div class="bmi-tick-slot"><span class="bmi-tick"></span><span class="bmi-tick-lbl">15</span></div>
+                  <span class="bmi-tick is-mini"></span>
+                  <div class="bmi-tick-slot"><span class="bmi-tick"></span><span class="bmi-tick-lbl">18.5</span></div>
+                  <span class="bmi-tick is-mini"></span>
+                  <div class="bmi-tick-slot"><span class="bmi-tick"></span><span class="bmi-tick-lbl">25</span></div>
+                  <span class="bmi-tick is-mini"></span>
+                  <div class="bmi-tick-slot"><span class="bmi-tick"></span><span class="bmi-tick-lbl">30</span></div>
+                  <span class="bmi-tick is-mini"></span>
+                  <div class="bmi-tick-slot"><span class="bmi-tick"></span><span class="bmi-tick-lbl">40</span></div>
+                </div>
               </div>
 
               <button class="text-link-btn" id="obSkipStartBtn" type="button" style="display:block;margin:auto auto 0;color:var(--muted);font-size:15px">${t("ob_skip")}</button>
