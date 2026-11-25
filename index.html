@@ -2067,8 +2067,9 @@
         { id: "gl_l",  view: "back",  label: "site_l_gl", cx: 178, cy: 292, note: "site_gl_note" },
         { id: "gl_r",  view: "back",  label: "site_r_gl", cx: 272, cy: 292, note: "site_gl_note" }
       ];
-      const SYMPTOMS_CORE = () => [t("sym_great"), t("sym_nausea"), t("sym_fatigue"), t("sym_no_appetite"), t("sym_heartburn"), t("sym_bloating"), t("sym_constipation")];
-      const SYMPTOMS_EXTRA = () => [t("sym_headache"), t("sym_dizziness"), t("sym_dry_mouth"), t("sym_burping"), t("sym_site_reaction"), t("sym_low_sugar")];
+      const SYM_CORE_KEYS = ["sym_great", "sym_nausea", "sym_fatigue", "sym_no_appetite", "sym_heartburn", "sym_bloating", "sym_constipation"];
+      const SYM_EXTRA_KEYS = ["sym_headache", "sym_dizziness", "sym_dry_mouth", "sym_burping", "sym_site_reaction", "sym_low_sugar"];
+      const ALL_SYM_KEYS = [...SYM_CORE_KEYS, ...SYM_EXTRA_KEYS];
       const DEFAULT_DRUGS = [
         { name: "Ozempic", dose: "0.25 mg", type: "drugTypeWeekly", intervalDays: 7, nextDoseIdx: 1 },
         { name: "Ozempic", dose: "0.5 mg", type: "drugTypeWeekly", intervalDays: 7, nextDoseIdx: 2 },
@@ -2226,7 +2227,7 @@
           if (state.goalMode !== "weight") {
             lines.push(tf("sum_glucose", fmtG(state.glucoseMmol[0]), fmtG(state.glucoseMmol[state.glucoseMmol.length - 1])));
           }
-          lines.push(tf("sum_symptoms", state.todaySymptoms.join(", ") || t("no_complaints_sum")));
+          lines.push(tf("sum_symptoms", state.todaySymptoms.map(symLabel).join(", ") || t("no_complaints_sum")));
           if (state.visitNote) lines.push(tf("sum_note", state.visitNote));
           txtPre.textContent = lines.join("\n");
         }
@@ -2362,7 +2363,7 @@
 
         // Build real symptoms block
         const symRowsHtml = state.todaySymptoms.length
-          ? state.todaySymptoms.slice(0, 3).map((s) => `<div style="display:flex;justify-content:space-between;font-size:7.6px;margin-bottom:2px"><span>${s}</span><strong>✓</strong></div>`).join("")
+          ? state.todaySymptoms.slice(0, 3).map((s) => `<div style="display:flex;justify-content:space-between;font-size:7.6px;margin-bottom:2px"><span>${symLabel(s, lang)}</span><strong>✓</strong></div>`).join("")
           : `<div style="font-size:7.6px;color:#374151">${L.none}</div>`;
 
         const body = $("#pdfPreviewBody");
@@ -2655,6 +2656,26 @@
       if (!Array.isArray(state.todaySymptoms)) state.todaySymptoms = [];
       const t = (k) => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || I18N.ru[k] || k;
       const tf = (k, ...args) => { let s = t(k); args.forEach((a, i) => { s = s.replace("%" + (i + 1) + "$s", a); }); return s; };
+      const SYM_TEXT_TO_KEY = {};
+      Object.keys(I18N).forEach((langCode) => {
+        ALL_SYM_KEYS.forEach((key) => {
+          const lbl = I18N[langCode] && I18N[langCode][key];
+          if (lbl) SYM_TEXT_TO_KEY[lbl.toLowerCase()] = key;
+        });
+      });
+      const symToKey = (s) => {
+        const raw = String(s || "").trim();
+        if (!raw) return "";
+        if (ALL_SYM_KEYS.includes(raw)) return raw;
+        return SYM_TEXT_TO_KEY[raw.toLowerCase()] || raw;
+      };
+      const symLabel = (k, langCode) => {
+        const key = symToKey(k);
+        if (!ALL_SYM_KEYS.includes(key)) return key;
+        const lc = (typeof langCode === "string" && I18N[langCode]) ? langCode : state.lang;
+        return (I18N[lc] && I18N[lc][key]) || I18N.en[key] || I18N.ru[key] || key;
+      };
+      state.todaySymptoms = [...new Set(state.todaySymptoms.map(symToKey).filter(Boolean))];
       if (state.weightDates.length !== state.weightsKg.length) {
         state.weightDates = state.weightsKg.map((_, i) => t("add_metric").replace("+ ", "") + " " + (i + 1));
       }
@@ -2675,6 +2696,19 @@
           }
           if (j.kind === "shot" && !j.site && j.sub && j.sub.includes("Зона:")) {
             j.site = j.sub.split("Зона:")[1].split("·")[0].trim();
+          }
+          if (j.kind === "sym") {
+            if (Array.isArray(j.symKeys)) {
+              j.symKeys = [...new Set(j.symKeys.map(symToKey).filter(Boolean))];
+            } else if (j.isTodaySym && state.todaySymptoms.length) {
+              j.symKeys = state.todaySymptoms.slice();
+            } else if (j.title && j.title.includes(":")) {
+              const parts = j.title.split(":").slice(1).join(":").split(",").map((p) => p.trim()).filter(Boolean);
+              const mapped = parts.map(symToKey);
+              if (mapped.length && mapped.every((k) => ALL_SYM_KEYS.includes(k))) {
+                j.symKeys = [...new Set(mapped)];
+              }
+            }
           }
         });
       }
@@ -3279,10 +3313,10 @@
             </div>
             <div class="chips">
               ${(() => {
-                const shown = state.symExpanded ? [...SYMPTOMS_CORE(), ...SYMPTOMS_EXTRA()] : SYMPTOMS_CORE();
-                const extraSelected = !state.symExpanded ? state.todaySymptoms.filter(s => SYMPTOMS_EXTRA().includes(s)) : [];
+                const shown = state.symExpanded ? [...SYM_CORE_KEYS, ...SYM_EXTRA_KEYS] : SYM_CORE_KEYS;
+                const extraSelected = !state.symExpanded ? state.todaySymptoms.filter((k) => SYM_EXTRA_KEYS.includes(k)) : [];
                 const list = [...new Set([...shown, ...extraSelected])];
-                return list.map((sym) => `<button class="chip ${state.todaySymptoms.includes(sym) ? "is-active" : ""}" data-sym="${sym}" type="button">${sym}</button>`).join("")
+                return list.map((key) => `<button class="chip ${state.todaySymptoms.includes(key) ? "is-active" : ""}" data-sym="${key}" type="button">${symLabel(key)}</button>`).join("")
                   + `<button class="chip chip-more-sym" id="toggleMoreSymBtn" type="button" style="display:inline-flex;align-items:center;gap:4px">${state.symExpanded ? `${t("collapse")} <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;transform:rotate(180deg)"><path d="m6 9 6 6 6-6"/></svg>` : `${tf("more_n", 6)} <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="m6 9 6 6 6-6"/></svg>`}</button>`;
               })()}
             </div>
@@ -3690,9 +3724,20 @@
         return `<span class="j-ico" style="background:var(--orange-soft);color:var(--orange)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></span>`;
       }
 
+      function journalItemTitle(j) {
+        if (j.kind === "sym" && Array.isArray(j.symKeys) && j.symKeys.length) {
+          return t("tag_feel") + ": " + j.symKeys.map(symLabel).join(", ");
+        }
+        return j.title;
+      }
+
       function renderJournalItem(j) {
-        let title = j.title;
+        let title = journalItemTitle(j);
         let sub = j.sub || "";
+        const dateLbl = (j.isTodaySym && j.group === "today") ? t("todayTitle") : j.date;
+        if (j.kind === "sym" && Array.isArray(j.symKeys) && j.dayOfWeek != null) {
+          sub = tf("drug_day_n", j.dayOfWeek, 7) + " · " + phaseBadge(DAY_PHASE[j.dayOfWeek] || DAY_PHASE[1]);
+        }
         if (j.kind === "metric" && j.weightKg != null) {
           title = tf("metric_title", fmtW(j.weightKg));
           if (state.goalMode !== "weight" && j.glucoseMmol != null) {
@@ -3711,7 +3756,7 @@
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-              <span style="font-size:12px;color:var(--muted);white-space:nowrap">${j.date}</span>
+              <span style="font-size:12px;color:var(--muted);white-space:nowrap">${dateLbl}</span>
               ${state.logEditMode ? `<button class="j-del-btn" data-del-log="${j.idx}" type="button" aria-label="Удалить">−</button>` : ""}
             </div>
           </div>`;
@@ -3722,17 +3767,29 @@
           .map((j, idx) => ({ ...j, idx }))
           .filter((j) => state.logFilter === "all" || j.kind === state.logFilter);
 
+        if (!items.length && state.logEditMode) {
+          state.logEditMode = false;
+        }
+
         const groups = [
           { key: "today", label: t("todayTitle") },
           { key: "week", label: t("this_week") },
           { key: "earlier", label: t("earlier") }
         ];
 
+        let firstVisibleGroup = true;
         const sectionsHtml = groups.map((g) => {
-          const gItems = items.filter((j) => (j.group || "earlier") === g.key);
+          const gItems = items.filter((j) => ((j.group === "today" || j.group === "week") ? j.group : "earlier") === g.key);
           if (!gItems.length) return "";
+          const headerHtml = firstVisibleGroup
+            ? `<div class="j-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin:0 4px 8px;">
+                <div class="j-sec-lbl" style="padding:0">${g.label}</div>
+                <button class="text-link-btn" id="toggleLogEditBtn" type="button" style="color:var(--accent);font-size:13.5px;font-weight:700;padding:2px 0">${state.logEditMode ? t("done") : t("edit")}</button>
+              </div>`
+            : `<div class="j-sec-lbl">${g.label}</div>`;
+          firstVisibleGroup = false;
           return `
-            <div class="j-sec-lbl">${g.label}</div>
+            ${headerHtml}
             <div class="ios-group">${gItems.map(renderJournalItem).join("")}</div>`;
         }).join("");
 
@@ -3741,18 +3798,17 @@
         const rotHtml = state.logFilter === "shot" && recentSites.length
           ? `<div class="rot-strip"><strong style="color:var(--ink)">${t("rotation")}</strong> ${recentSites.join(" ← ")}</div>`
           : (state.logFilter === "sym" && items.length
-            ? `<div class="rot-strip"><strong style="color:var(--ink)">${t("summary")}</strong> ${tf("records_n", items.length, items[0].title)}</div>`
+            ? `<div class="rot-strip"><strong style="color:var(--ink)">${t("summary")}</strong> ${tf("records_n", items.length, journalItemTitle(items[0]))}</div>`
             : "");
 
         return `
           <div class="today-kicker">${dateKicker()}</div>
           <div class="today-head-row" style="align-items:center;margin-bottom:8px">
             <h1 style="margin:0">${t("logTitle")}</h1>
-            <div style="display:flex;align-items:center;gap:10px">
+            <div class="today-head-actions">
               ${state.logFilter === "metric"
                 ? `<button class="today-quick-add" id="openLogBtn" type="button" style="height:32px;padding:0 11px;font-size:13px">${t("add_metric")}</button>`
                 : `<button class="today-quick-add" id="openNoteBtn" type="button" style="height:32px;padding:0 11px;font-size:13px">${t("addNote")}</button>`}
-              ${state.journal.length ? `<button class="text-link-btn" id="toggleLogEditBtn" type="button" style="font-size:13.5px;color:${state.logEditMode ? "var(--accent)" : "var(--muted)"};font-weight:${state.logEditMode ? "600" : "500"}">${state.logEditMode ? t("done") : t("edit")}</button>` : ""}
               <button class="pill-btn" data-open-settings="1" type="button" aria-label="Настройки" style="width:34px;height:34px;padding:0;justify-content:center;border-radius:17px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
             </div>
           </div>
@@ -4094,7 +4150,7 @@
               <div class="bento-tile">
                 <span class="bento-lbl">${t("adherence")}</span>
                 <span class="bento-val">${state.journal.filter(j => j.kind === "shot").length ? "88%" : "—"}</span>
-                <span class="bento-sub">${state.todaySymptoms.length ? state.todaySymptoms[0] : t("no_complaints")}</span>
+                <span class="bento-sub">${state.todaySymptoms.length ? symLabel(state.todaySymptoms[0]) : t("no_complaints")}</span>
               </div>
             </div>
             <div class="care-action-bar no-print">
@@ -4960,11 +5016,12 @@
         }
         const sym = e.target.closest("[data-sym]");
         if (sym) {
-          const picked = sym.dataset.sym;
-          if (picked === t("sym_great")) {
-            state.todaySymptoms = state.todaySymptoms.includes(picked) ? [] : [t("sym_great")];
+          const picked = symToKey(sym.dataset.sym);
+          if (!picked) return;
+          if (picked === "sym_great") {
+            state.todaySymptoms = state.todaySymptoms.includes("sym_great") ? [] : ["sym_great"];
           } else {
-            state.todaySymptoms = state.todaySymptoms.filter((x) => x !== t("sym_great"));
+            state.todaySymptoms = state.todaySymptoms.filter((x) => x !== "sym_great");
             if (state.todaySymptoms.includes(picked)) state.todaySymptoms = state.todaySymptoms.filter((x) => x !== picked);
             else state.todaySymptoms.push(picked);
           }
@@ -4973,7 +5030,9 @@
             const symEntry = {
               date: t("todayTitle"),
               group: "today",
-              title: t("tag_feel") + ": " + state.todaySymptoms.join(", "),
+              dayOfWeek: state.dayOfWeek,
+              symKeys: state.todaySymptoms.slice(),
+              title: t("tag_feel") + ": " + state.todaySymptoms.map(symLabel).join(", "),
               sub: tf("drug_day_n", state.dayOfWeek, 7) + " · " + phaseBadge(DAY_PHASE[state.dayOfWeek] || DAY_PHASE[1]),
               kind: "sym",
               isTodaySym: true
@@ -5420,7 +5479,7 @@
           if (state.goalMode !== "weight") {
             lines.push(tf("sum_glucose", fmtG(state.glucoseMmol[0]), fmtG(state.glucoseMmol[state.glucoseMmol.length - 1])));
           }
-          lines.push(tf("sum_symptoms", state.todaySymptoms.join(", ") || t("no_complaints_sum")));
+          lines.push(tf("sum_symptoms", state.todaySymptoms.map(symLabel).join(", ") || t("no_complaints_sum")));
           if (state.visitNote) lines.push(tf("sum_note", state.visitNote));
           const txt = lines.join("\n");
           if (navigator.clipboard && navigator.clipboard.writeText) {
