@@ -10,6 +10,7 @@
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
   <title>Steady — GLP-1 & Metabolic Companion</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
@@ -1459,6 +1460,9 @@
       .wave-fill, .wave-peak-label, .wave-peak-dot, .ob-glass-pill { animation: none; opacity: 1; }
       .wave-peak-pulse { animation: none; opacity: 0.2; }
     }
+    /* iOS Safari: never auto-zoom on focus */
+    input, select, textarea { font-size: 16px; }
+    .ob-lang-pill select { font-size: 16px; }
   </style>
 </head>
 <body>
@@ -2350,6 +2354,7 @@
         return !!BILLING_API_URL && !tgInitData();
       }
       async function cryptoFetch(path, body) {
+        if (!navigator.onLine) return { isPro: false };
         const opts = { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json" } };
         if (body) opts.body = JSON.stringify(body);
         const res = await fetch(BILLING_API_URL + path, opts);
@@ -2357,6 +2362,7 @@
       }
       async function restoreProFromCrypto(silent) {
         if (!webBillingEnabled()) return;
+        if (!navigator.onLine) return;
         try {
           const clientId = cryptoClientId();
           let invoiceId = null;
@@ -2398,6 +2404,7 @@
       }
       async function restoreProFromTelegram() {
         if (!billingEnabled()) return;
+        if (!navigator.onLine) return;
         try {
           const data = await billingFetch("/api/pro-status");
           if (data && data.isPro) {
