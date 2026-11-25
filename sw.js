@@ -6,7 +6,7 @@
 //     поднимать вручную при каждом деплое — обновления приходят сами.
 // CACHE_VERSION используется только для очистки старых кэшей.
 
-const CACHE_VERSION = 'steady-v23';
+const CACHE_VERSION = 'steady-v24';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 const PRECACHE = [
@@ -19,9 +19,6 @@ const PRECACHE = [
   './assets/icon_7.png',
   './assets/icon_8.png',
   './assets/icon_9.png',
-  './assets/ob_shots.webp',
-  './assets/ob_sitemap.webp',
-  './assets/ob_pdf.webp',
   './assets/ob_weight.webp',
   './assets/ob_diabetes.webp',
   './assets/ob_both.webp',
