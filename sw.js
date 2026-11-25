@@ -6,7 +6,7 @@
 //     поднимать вручную при каждом деплое — обновления приходят сами.
 // CACHE_VERSION используется только для очистки старых кэшей.
 
-const CACHE_VERSION = 'steady-v19';
+const CACHE_VERSION = 'steady-v20';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 const PRECACHE = [
@@ -16,15 +16,15 @@ const PRECACHE = [
   './icons/apple-touch-icon.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './assets/icon_1.png',
-  './assets/icon_2.png',
-  './assets/icon_3.png',
-  './assets/icon_4.png',
-  './assets/icon_5.png',
-  './assets/icon_6.png',
   './assets/icon_7.png',
   './assets/icon_8.png',
   './assets/icon_9.png',
+  './assets/ob_shots.webp',
+  './assets/ob_sitemap.webp',
+  './assets/ob_pdf.webp',
+  './assets/ob_weight.webp',
+  './assets/ob_diabetes.webp',
+  './assets/ob_both.webp',
 ];
 
 self.addEventListener('install', (event) => {
