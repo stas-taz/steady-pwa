@@ -1541,6 +1541,18 @@
     .pro-strike { font-size: 11px; color: var(--muted); text-decoration: line-through; }
     .pro-foot { margin-top: 10px; font-size: 12px; color: #64748B; text-align: center; }
     #closeProModal { width: 32px; height: 32px; padding: 0; justify-content: center; background: rgba(15,23,42,0.06); color: #475569; border: 0; font-size: 14px; }
+
+    /* ---- Daily Essentials rings v2 ---- */
+    .ring-box { position: relative; }
+    .ring-lap1 { fill: none; stroke-linecap: round; transition: stroke-dashoffset 340ms var(--ios-ease), stroke 260ms ease; }
+    .ring-lap2 { fill: none; stroke: #059669; stroke-linecap: round; filter: drop-shadow(0 0 3px rgba(5, 150, 105, 0.35)); transition: stroke-dashoffset 340ms var(--ios-ease), opacity 220ms ease; }
+    .ring-pct { font-size: 15px; font-weight: 800; letter-spacing: -0.03em; color: #0F172A; transition: color 220ms ease; }
+    .ring-pct.done { color: #15803D; }
+    .ring-pct.over { color: #047857; }
+    .ring-done-badge { position: absolute; top: -2px; right: -2px; width: 22px; height: 22px; border-radius: 999px; background: #34C759; color: #FFFFFF; border: 2.5px solid #FFFFFF; box-shadow: 0 3px 8px rgba(52, 199, 89, 0.35); display: flex; align-items: center; justify-content: center; transform: scale(0); opacity: 0; pointer-events: none; transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 180ms ease; }
+    .ring-done-badge.show { transform: scale(1); opacity: 1; }
+    .ring-sub .over-val { color: #059669; font-weight: 700; }
+    .ring-val .over-val { color: #059669; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -2724,6 +2736,40 @@
         </svg>`;
       }
 
+      function updateDailyRingsUI() {
+        const metrics = [["protein", state.proteinGoal], ["fiber", state.fiberGoal], ["water", state.waterGoal]];
+        let any = false;
+        for (const [key, goalRaw] of metrics) {
+          const lap1 = document.querySelector(`[data-ring-lap1="${key}"]`);
+          const lap2 = document.querySelector(`[data-ring-lap2="${key}"]`);
+          if (!lap1 || !lap2) continue;
+          any = true;
+          const val = state[key] || 0;
+          const goal = Math.max(1, goalRaw);
+          const ratio = val / goal;
+          const pct = Math.round(ratio * 100);
+          const done = ratio >= 1, over = ratio > 1;
+          const r = 30, circ = 2 * Math.PI * r;
+          lap1.setAttribute("stroke-dashoffset", (circ * (1 - Math.min(1, ratio))).toFixed(1));
+          lap1.setAttribute("stroke", done ? "#34C759" : (lap1.dataset.ringBase || "var(--accent)"));
+          lap2.setAttribute("stroke-dashoffset", (circ * (1 - Math.min(1, Math.max(0, ratio - 1)))).toFixed(1));
+          lap2.style.opacity = over ? "1" : "0";
+          const pctEl = document.querySelector(`[data-ring-pct="${key}"]`);
+          if (pctEl) { pctEl.textContent = pct + "%"; pctEl.classList.toggle("done", done); pctEl.classList.toggle("over", over); }
+          const badge = document.querySelector(`[data-ring-badge="${key}"]`);
+          if (badge) badge.classList.toggle("show", done);
+          const minus = document.querySelector(`[data-ring-minus="${key}"]`);
+          if (minus) minus.style.display = val > 0 ? "" : "none";
+          const valEl = document.querySelector(`[data-ring-val="${key}"]`);
+          if (valEl) {
+            const unit = key === "water" ? literUnit() : gramUnit();
+            const cur = key === "water" ? (val / 1000).toFixed(1) : val;
+            const tot = key === "water" ? (goal / 1000).toFixed(1) : goal;
+            valEl.innerHTML = (over ? `<span class="over-val">${cur}</span>` : cur) + "/" + tot + " " + unit;
+          }
+        }
+        return any;
+      }
       function renderToday() {
         const dr = state.drugs[state.drugIdx];
         const curIdx = state.siteIdx % SITES.length;
@@ -2857,26 +2903,34 @@
             </div>
             ${(() => {
               const mkRing = (key, title, val, goal, valStr, plusLbl, delta, color, track, icoSvg) => {
-                const pct = Math.min(100, Math.round((val / Math.max(1, goal)) * 100));
-                const done = val >= goal;
-                const strokeCol = done ? "var(--green)" : color;
+                const ratio = val / Math.max(1, goal);
+                const pct = Math.round(ratio * 100);
+                const done = ratio >= 1;
+                const over = ratio > 1;
                 const r = 30, circ = 2 * Math.PI * r;
-                const dashOff = circ * (1 - pct / 100);
+                const dash1 = circ * (1 - Math.min(1, ratio));
+                const dash2 = circ * (1 - Math.min(1, Math.max(0, ratio - 1)));
+                const strokeCol = done ? "#34C759" : color;
+                const valHtml = over ? valStr.replace(/^(\s*[^\s/]+)/, '<span class="over-val">$1</span>') : valStr;
                 return `
-                  <div class="ring-col">
-                    <div class="ring-wrap">
+                  <div class="ring-col" data-ring="${key}">
+                    <div class="ring-wrap ring-box">
                       <svg width="72" height="72" viewBox="0 0 72 72" style="transform:rotate(-90deg);display:block">
                         <circle cx="36" cy="36" r="${r}" fill="none" stroke="${track}" stroke-width="6.5"/>
-                        <circle cx="36" cy="36" r="${r}" fill="none" stroke="${strokeCol}" stroke-width="6.5" stroke-linecap="round" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${dashOff.toFixed(1)}" style="transition:stroke-dashoffset 420ms cubic-bezier(0.22,1,0.36,1)"/>
+                        <circle class="ring-lap1" data-ring-lap1="${key}" data-ring-base="${color}" cx="36" cy="36" r="${r}" fill="none" stroke="${strokeCol}" stroke-width="6.5" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${dash1.toFixed(1)}"/>
+                        <circle class="ring-lap2" data-ring-lap2="${key}" cx="36" cy="36" r="${r}" fill="none" stroke="#059669" stroke-width="6.5" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${dash2.toFixed(1)}" opacity="${over ? 1 : 0}"/>
                       </svg>
                       <div class="ring-center">
-                        <span class="ring-pct" style="font-size:14.5px;${done ? "color:var(--green)" : ""}">${done ? "✓" : pct + "%"}</span>
+                        <span class="ring-pct${done ? " done" : ""}${over ? " over" : ""}" data-ring-pct="${key}">${pct}%</span>
+                      </div>
+                      <div class="ring-done-badge${done ? " show" : ""}" data-ring-badge="${key}">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                       </div>
                     </div>
                     <div class="ring-title">${title}</div>
-                    <div class="ring-val">${valStr}</div>
-                    <div class="ring-actions is-ctx" style="--ring-tint:var(--accent-soft);--ring-ink:var(--accent)">
-                      ${val > 0 ? `<button class="ring-minus" data-macro="${key}" data-delta="-${delta}" type="button" aria-label="Уменьшить">−</button>` : ""}
+                    <div class="ring-val" data-ring-val="${key}">${valHtml}</div>
+                    <div class="ring-actions is-ctx" style="--ring-tint:${track};--ring-ink:${color}">
+                      <button class="ring-minus" data-macro="${key}" data-ring-minus="${key}" data-delta="-${delta}" type="button" aria-label="Уменьшить" style="${val > 0 ? "" : "display:none"}">−</button>
                       <button class="ring-plus" data-macro="${key}" data-delta="${delta}" type="button">${plusLbl}</button>
                     </div>
                   </div>`;
@@ -4320,13 +4374,16 @@
         const macro = e.target.closest("[data-macro]");
         if (macro) {
           const k = macro.dataset.macro, d = Number(macro.dataset.delta);
-          const prev = state[k];
-          state[k] = Math.max(0, prev + d);
+          const limits = { protein: 500, fiber: 150, water: 8000 };
+          const prev = state[k] || 0;
+          state[k] = Math.max(0, Math.min(limits[k] || 10000, prev + d));
           const goalKey = k + "Goal";
           if (d > 0 && prev < state[goalKey] && state[k] >= state[goalKey]) {
             showToast(tf("toast_macro_done", t("macro_" + k)));
           }
-          render(); return;
+          saveState();
+          if (!updateDailyRingsUI()) render();
+          return;
         }
 
                 if (e.target.closest("#toggleMoreSymBtn")) {
