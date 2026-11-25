@@ -4945,10 +4945,10 @@
           window.haptic && window.haptic();
           return;
         }
-        if (e.target.id === "obRemindBtn") { state.remindEnabled = !state.remindEnabled; render(); return; }
+        if (e.target.closest("#obRemindBtn")) { state.remindEnabled = !state.remindEnabled; render(); return; }
         if (e.target.closest("#obNextBtn")) { state.obStep = Math.min(4, state.obStep + 1); render(); obEnterStep(1); return; }
         if (e.target.closest("#obBackBtn")) { state.obStep = Math.max(0, state.obStep - 1); render(); obEnterStep(-1); return; }
-        if (e.target.id === "obFinishBtn") {
+        if (e.target.closest("#obFinishBtn")) {
           const _dr = state.drugs[state.drugIdx];
           if (_dr) _dr.intervalDays = state.intervalDays;
           const _toKg = (v) => state.usUnits ? v / 2.20462 : v;
@@ -4975,7 +4975,7 @@
         if (e.target.closest("#toastUndoBtn") && lastUndo) {
           const fn = lastUndo; lastUndo = null; $("#toast").classList.remove("show"); fn(); return;
         }
-        if (e.target.id === "resetDemoBtn") {
+        if (e.target.closest("#resetDemoBtn")) {
           state.weightsKg = []; state.glucoseMmol = []; state.weightDates = []; state.pointDoses = [];
           state.journal = []; state.shotsByDay = {}; state.todaySymptoms = [];
           state.protein = 0; state.fiber = 0; state.water = 0;
@@ -5361,10 +5361,21 @@
           showToast(t("toast_csv"));
           return;
         }
-        if (e.target.id === "replayObBtn") { $("#settingsScreen").hidden = true; state.settingsSub = null; state.onboarded = false; state.obStep = 0; render(); return; }
-        if (e.target.id === "addCalendarBtn") { downloadIcs(); return; }
-        if (e.target.id === "exportJsonBtn") { exportJson(); return; }
-        if (e.target.id === "importJsonBtn") { $("#importJsonFile").click(); return; }
+        if (e.target.closest("#replayObBtn")) {
+          $("#settingsScreen").hidden = true;
+          document.querySelectorAll(".modal-bg, .pdf-sheet-modal").forEach((el) => { el.hidden = true; });
+          state.settingsSub = null;
+          state.customFromOb = false;
+          state.onboarded = false;
+          state.obStep = 0;
+          render();
+          const obScroll = document.querySelector("#obScreen .ob-scroll");
+          if (obScroll) obScroll.scrollTop = 0;
+          return;
+        }
+        if (e.target.closest("#addCalendarBtn")) { downloadIcs(); return; }
+        if (e.target.closest("#exportJsonBtn")) { exportJson(); return; }
+        if (e.target.closest("#importJsonBtn")) { $("#importJsonFile").click(); return; }
         const titBtn = e.target.closest("[data-titration-step]");
         if (titBtn) {
           const idx = Number(titBtn.dataset.titrationStep);
