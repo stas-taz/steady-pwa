@@ -1372,8 +1372,8 @@
     .ob-benefit img { width: 40px; height: 40px; object-fit: contain; flex-shrink: 0; }
     .ob-benefit-title { font-size: 14.5px; font-weight: 700; line-height: 1.2; }
     .ob-benefit-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
-    .ob-goal-card { width: 100%; display: flex; align-items: center; gap: 13px; padding: 14px; border-radius: 14px; background: #E9ECEF; border: 1.5px solid transparent; box-shadow: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; transition: transform 120ms ease, background-color 160ms ease, border-color 160ms ease; margin-bottom: 9px; position: relative; }
-    .ob-goal-card.is-selected { background: #EBF4FF; border: 1.5px solid #007AFF; }
+    .ob-goal-card { width: 100%; height: 100%; display: flex; align-items: center; gap: 13px; padding: 14px; border-radius: 14px; text-align: left; font: inherit; color: var(--ink); cursor: pointer; transition: transform 120ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease; position: relative; }
+    .ob-goal-card.is-selected { background: #EBF4FF; border: 1.5px solid #007AFF; box-shadow: 0 4px 16px rgba(0, 122, 255, 0.10); }
     .ob-goal-card:active { transform: scale(0.98); }
     .ob-goal-card img { width: 38px; height: 38px; object-fit: contain; flex-shrink: 0; }
     .ob-goal-card .ob-rec-badge { position: absolute; top: 10px; right: 12px; margin-left: 0; }
@@ -1389,7 +1389,9 @@
 
     /* ---- Onboarding v3.1 ---- */
     .ob-fab-back { background: #E5E7EB; color: #1C1C1E; }
-    .ob-goal-card:not(.is-selected) { border: 1.5px solid rgba(15, 23, 42, 0.06); }
+    .ob-goal-card:not(.is-selected) { background: #FFFFFF; border: 1.5px solid rgba(15, 23, 42, 0.04); box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05); }
+    .ob-goal-list { display: grid; grid-auto-rows: 1fr; gap: 12px; }
+    .ob-goal-desc { text-wrap: balance; }
     .ob-scroll { display: flex; flex-direction: column; }
     .ob-scroll > * { flex-shrink: 0; }
     .ob-white-card .preset-grid { border-top: 1px solid rgba(15,23,42,0.06); padding-top: 10px; margin-top: 8px; }
@@ -3323,19 +3325,21 @@
               <h1 class="ob-title">${t("ob_goal_title")}</h1>
               <p class="ob-sub">${t("ob_goal_sub")}</p>
 
-              <button class="ob-goal-card ${state.goalMode === "weight" ? "is-selected" : ""}" data-ob-goal="weight" type="button">
-                <img src="assets/ob_weight.webp" alt="" width="38" height="38">
-                <div><div style="font-weight:600">${t("ob_goal_weight_title")}</div><div style="font-size:12.5px;color:var(--muted)">${t("ob_goal_weight_sub")}</div></div>
-              </button>
-              <button class="ob-goal-card ${state.goalMode === "diabetes" ? "is-selected" : ""}" data-ob-goal="diabetes" type="button">
-                <img src="assets/ob_diabetes.webp" alt="" width="38" height="38">
-                <div><div style="font-weight:600">${t("ob_goal_diabetes_title")}</div><div style="font-size:12.5px;color:var(--muted)">${t("ob_goal_diabetes_sub")}</div></div>
-              </button>
-              <button class="ob-goal-card ${state.goalMode === "both" ? "is-selected" : ""}" data-ob-goal="both" type="button">
-                <img src="assets/ob_both.webp" alt="" width="38" height="38">
-                <div><div style="font-weight:600">${t("ob_goal_both_title")}</div><div style="font-size:12.5px;color:var(--muted)">${t("ob_goal_both_sub")}</div></div>
-                <span class="ob-rec-badge">${t("ob_rec")}</span>
-              </button>
+              <div class="ob-goal-list">
+                <button class="ob-goal-card ${state.goalMode === "weight" ? "is-selected" : ""}" data-ob-goal="weight" type="button">
+                  <img src="assets/ob_weight.webp" alt="" width="38" height="38">
+                  <div><div style="font-weight:600">${t("ob_goal_weight_title")}</div><div class="ob-goal-desc" style="font-size:12.5px;color:var(--muted);margin-top:2px">${t("ob_goal_weight_sub")}</div></div>
+                </button>
+                <button class="ob-goal-card ${state.goalMode === "diabetes" ? "is-selected" : ""}" data-ob-goal="diabetes" type="button">
+                  <img src="assets/ob_diabetes.webp" alt="" width="38" height="38">
+                  <div><div style="font-weight:600">${t("ob_goal_diabetes_title")}</div><div class="ob-goal-desc" style="font-size:12.5px;color:var(--muted);margin-top:2px">${t("ob_goal_diabetes_sub")}</div></div>
+                </button>
+                <button class="ob-goal-card ${state.goalMode === "both" ? "is-selected" : ""}" data-ob-goal="both" type="button">
+                  <img src="assets/ob_both.webp" alt="" width="38" height="38">
+                  <div><div style="font-weight:600">${t("ob_goal_both_title")}</div><div class="ob-goal-desc" style="font-size:12.5px;color:var(--muted);margin-top:2px">${t("ob_goal_both_sub")}</div></div>
+                  <span class="ob-rec-badge">${t("ob_rec")}</span>
+                </button>
+              </div>
             </div>`;
           footer = `
             <div class="ob-footer-row" style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center">
