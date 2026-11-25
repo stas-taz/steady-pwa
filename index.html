@@ -152,12 +152,16 @@
     :root[data-theme="dark"] .ob-screen { background: #0B0B0D; }
     .ob-screen[hidden] { display: none; }
     .ob-card {
-      width: 100%; max-width: 430px; min-height: 100dvh;
+      width: 100%; max-width: 430px; height: 100dvh; max-height: 100dvh;
       background: var(--bg); color: var(--ink);
       padding: 20px 20px 32px;
-      display: flex; flex-direction: column; justify-content: space-between;
+      display: flex; flex-direction: column; overflow: hidden;
       box-shadow: 0 20px 60px rgba(0,0,0,.14);
     }
+    .ob-shell { height: 100dvh; max-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    .ob-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 12px; }
+    .ob-footer-wrap { flex-shrink: 0; }
+    .chip.is-active-soft { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); font-weight: 600; }
 
     .ios-switch {
       position: relative; width: 51px; height: 31px; border-radius: 31px; border: 0;
@@ -3308,18 +3312,17 @@
             <div style="padding-top:20px">
               <h1 style="font-size:28px;margin-bottom:6px">${t("ob_drug_title")}</h1>
               <p class="lead" style="margin-bottom:16px">${t("ob_drug_sub")}</p>
-              ${state.drugs.map((d, idx) => `
-                <button class="drug-opt ${idx === state.drugIdx ? "is-active" : ""}" data-ob-drug="${idx}" type="button">
-                  <span>${d.name} · ${drugDose(d)}</span>
-                  <span style="font-size:12px;opacity:.75">${drugType(d)}</span>
-                </button>`).join("")}
-              <button class="drug-opt" id="obOpenCustomDrugBtn" type="button" style="justify-content:center;color:var(--accent);font-weight:600">
-                ${t("ob_add_custom")}
-              </button>
+              <div class="chips" style="gap:7px">
+                ${[...new Set(state.drugs.map((d) => d.name))].map((name) => {
+                  const active = state.drugs[state.drugIdx] && state.drugs[state.drugIdx].name === name;
+                  return `<button class="chip ${active ? "is-active-soft" : ""}" data-ob-drug-name="${name}" type="button">${name}</button>`;
+                }).join("")}
+                <button class="chip" id="obOpenCustomDrugBtn" type="button" style="color:var(--accent);font-weight:600">${t("ob_add_custom")}</button>
+              </div>
 
               <div style="font-size:13px;font-weight:600;color:var(--muted);margin:16px 0 8px">${t("ob_cur_dose")}</div>
               <div class="chips" style="gap:7px">
-                ${state.drugs.map((d, idx) => d.name === dr.name ? `<button class="chip ${idx === state.drugIdx ? "is-active" : ""}" data-ob-dose="${idx}" type="button">${ld(d.dose)}</button>` : "").join("")}
+                ${state.drugs.map((d, idx) => d.name === dr.name ? `<button class="chip ${idx === state.drugIdx ? "is-active-soft" : ""}" data-ob-dose="${idx}" type="button">${ld(d.dose)}</button>` : "").join("")}
               </div>
 
               <div style="font-size:13px;font-weight:600;color:var(--muted);margin:16px 0 8px">${t("ob_interval")}</div>
@@ -3445,7 +3448,7 @@
             </div>`;
         }
 
-        $("#obCard").innerHTML = `${topBody}${footer}`;
+        $("#obCard").innerHTML = `<div class="ob-scroll">${topBody}</div><div class="ob-footer-wrap">${footer}</div>`;
       }
 
       function steadyLogoSvg(size) {
@@ -3849,6 +3852,13 @@
         if (e.target.closest("#topObBtn")) { state.onboarded = false; state.obStep = 0; render(); return; }
         const obGoal = e.target.closest("[data-ob-goal]");
         if (obGoal) { state.goalMode = obGoal.dataset.obGoal; if (state.goalMode === "weight") state.chartMode = "weight"; render(); return; }
+        const obDrugName = e.target.closest("[data-ob-drug-name]");
+        if (obDrugName) {
+          const _name = obDrugName.dataset.obDrugName;
+          const _idx = state.drugs.findIndex((d) => d.name === _name);
+          if (_idx >= 0) state.drugIdx = _idx;
+          render(); return;
+        }
         const obDrug = e.target.closest("[data-ob-drug]");
         if (obDrug) { state.drugIdx = Number(obDrug.dataset.obDrug); render(); return; }
         const obDay = e.target.closest("[data-ob-day]");
