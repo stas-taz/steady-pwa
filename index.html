@@ -1922,6 +1922,30 @@
     .preset-lbl { font-size:11px; font-weight:600; opacity:.7; }
     .preset-chip.is-active .preset-lbl { opacity:1; }
     .preset-num { font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+    .reminder-time-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      font-size: 16px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .reminder-time-input::-webkit-calendar-picker-indicator {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
 
     /* ---- iOS native motion ---- */
     :root { --ios-ease: cubic-bezier(0.32, 0.72, 0, 1); }
@@ -6241,6 +6265,26 @@
           `;
       }
 
+      function syncReminderPresetUI(grid, timeStr, isCustomMode) {
+        const grids = grid ? [grid] : [...document.querySelectorAll(".preset-grid")];
+        const presets = ["08:00", "12:00", "20:00"];
+        const customActive = (typeof isCustomMode === "boolean") ? isCustomMode : !presets.includes(timeStr);
+        grids.forEach((g) => {
+          g.querySelectorAll("[data-preset-time]").forEach((el) => {
+            const pt = el.dataset.presetTime;
+            if (pt === "custom") {
+              el.classList.toggle("is-active", customActive);
+              const num = el.querySelector(".preset-num");
+              if (num) num.textContent = customActive ? timeStr : "—";
+              const inp = el.querySelector(".reminder-time-input");
+              if (inp && inp.value !== timeStr) inp.value = timeStr;
+            } else {
+              el.classList.toggle("is-active", !customActive && pt === timeStr);
+            }
+          });
+        });
+      }
+
       function reminderTimeUI() {
         if (!state.remindEnabled) return "";
         const cur = state.reminderTime || "09:00";
@@ -6257,11 +6301,11 @@
                 <span class="preset-lbl">${t(p.key)}</span>
                 <span class="preset-num">${p.time}</span>
               </button>`).join("")}
-            <button class="preset-chip ${isCustom ? "is-active" : ""}" data-preset-time="custom" type="button" style="position:relative;overflow:hidden">
+            <label class="preset-chip ${isCustom ? "is-active" : ""}" data-preset-time="custom" style="position:relative;overflow:hidden">
               <span class="preset-lbl">${t("preset_custom")}</span>
               <span class="preset-num">${isCustom ? cur : "—"}</span>
-              <input type="time" id="reminderTimeInput" value="${cur}" aria-label="${t("preset_custom")}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0">
-            </button>
+              <input type="time" class="reminder-time-input" value="${cur}" aria-label="${t("preset_custom")}">
+            </label>
           </div>`;
       }
 
@@ -7787,8 +7831,11 @@
             state.shotDays = [...state.shotDays, d].sort((a, b) => a - b);
           }
           state.shotDay = state.shotDays[0];
-          state.dayOfWeek = state.shotDay;
-          render(); return;
+          saveState();
+          document.querySelectorAll("[data-ob-day]").forEach((btn) =>
+            btn.classList.toggle("is-active", state.shotDays.includes(Number(btn.dataset.obDay)))
+          );
+          return;
         }
         const obDose = e.target.closest("[data-ob-dose]");
         if (obDose) {
@@ -7849,11 +7896,19 @@
           return;
         }
         const preset = e.target.closest("[data-preset-time]");
-        if (preset && preset.dataset.presetTime !== "custom") {
+        if (preset) {
+          const grid = preset.closest(".preset-grid");
+          if (preset.dataset.presetTime === "custom") {
+            const inp = preset.querySelector(".reminder-time-input");
+            if (inp) {
+              try { inp.focus(); } catch (_) {}
+              try { if (typeof inp.showPicker === "function") inp.showPicker(); } catch (_) {}
+            }
+            return;
+          }
           state.reminderTime = preset.dataset.presetTime;
           saveState();
-          document.querySelectorAll("[data-preset-time]").forEach((b) => b.classList.toggle("is-active", b.dataset.presetTime === state.reminderTime));
-          window.haptic && window.haptic();
+          syncReminderPresetUI(grid, state.reminderTime, false);
           return;
         }
         if (e.target.closest("#obRemindBtn")) { state.remindEnabled = !state.remindEnabled; render(); return; }
@@ -8770,9 +8825,11 @@
           visitCustomForm.step = e.target.value;
           const errEl = $("#vsCustomErr"); if (errEl) errEl.hidden = true;
         }
-        if (e.target.id === "reminderTimeInput") {
-          state.reminderTime = e.target.value || "09:00";
+        if (e.target && e.target.classList && e.target.classList.contains("reminder-time-input")) {
+          const val = e.target.value || "09:00";
+          state.reminderTime = val;
           saveState();
+          syncReminderPresetUI(e.target.closest(".preset-grid"), val, true);
         }
         if (e.target.id === "obCurW") { state.obStartWeight = e.target.value; saveState(); updateObBmiUi(); }
         if (e.target.id === "obTarW") { state.obTargetWeight = e.target.value; saveState(); updateObBmiUi(); }
@@ -8787,10 +8844,11 @@
           render();
           return;
         }
-        if (e.target && e.target.id === "reminderTimeInput") {
-          state.reminderTime = e.target.value || "09:00";
+        if (e.target && e.target.classList && e.target.classList.contains("reminder-time-input")) {
+          const val = e.target.value || "09:00";
+          state.reminderTime = val;
           saveState();
-          render();
+          syncReminderPresetUI(e.target.closest(".preset-grid"), val, true);
           return;
         }
         if (e.target && e.target.id === "importJsonFile") {
