@@ -3581,8 +3581,25 @@
       function renderPdfPreview() {
         const lang = activeReportLang();
         const L = PDF_I18N[lang] || PDF_I18N.en;
+        const tPdf = (k) => (I18N[lang] && I18N[lang][k]) || (I18N.en && I18N.en[k]) || k;
+        const wuPdf = state.usUnits ? "lbs" : (lang === "ru" ? "кг" : "kg");
+        const guPdf = state.usUnits ? "mg/dL" : (lang === "ru" ? "ммоль/л" : "mmol/L");
+        const mgPdf = lang === "ru" ? "мг" : "mg";
+        const fmtWPdf = (kg) => (kg == null || isNaN(kg)) ? "—" : (state.usUnits ? (kg * 2.20462).toFixed(1) + " lbs" : kg.toFixed(1) + " " + wuPdf);
+        const fmtGPdf = (mm) => (mm == null || isNaN(mm)) ? "—" : (state.usUnits ? Math.round(mm * 18) + " mg/dL" : mm.toFixed(1) + " " + guPdf);
+        const ldPdf = (s) => {
+          const raw = String(s == null ? "" : s);
+          if (raw === "maint") return tPdf("titration_maint");
+          return raw
+            .replace(/\bmg\b|мг/gi, mgPdf)
+            .replace(/\bml\b|мл/gi, tPdf("unit_ml"))
+            .replace(/(\d)\s*(?:u|ед\.?|Ü|j\.?)\b/gi, "$1 " + tPdf("unit_u"))
+            .replace(/Таблетка|Pill|Comprimido|Tablette|Comprimé|Compressa|Tablet|Tabletka|Hap/gi, tPdf("pill"))
+            .replace(/Укол 1 раз\/нед/g, tPdf("drugTypeWeekly"))
+            .replace(/Ежедневно/g, tPdf("drugTypeDaily"));
+        };
         const dr = state.drugs[state.drugIdx];
-        const doseLbl = drugDose(dr);
+        const doseLbl = ldPdf(dr && dr.dose ? dr.dose : "");
         const ws = Array.isArray(state.weightsKg) ? state.weightsKg : [];
         const hasW = ws.length > 0;
         const hasW2 = ws.length >= 2;
@@ -3641,12 +3658,12 @@
             ${wPts.map(([cx, cy], idx) => idx === wPts.length - 1
               ? `<rect x="${(cx - 2.6).toFixed(1)}" y="${(cy - 2.6).toFixed(1)}" width="5.2" height="5.2" fill="#005FCC" stroke="#111827" stroke-width="0.9"/>`
               : `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2.5" fill="#FFF" stroke="#111827" stroke-width="1.2"/>`).join("")}
-            <text x="20" y="10" font-size="6.8" font-weight="700" fill="#111827">${fmtW(firstW)}</text>
-            <text x="${Math.min(266, lastP[0] - 12).toFixed(1)}" y="${Math.max(10, lastP[1] - 6).toFixed(1)}" font-size="7.1" font-weight="700" fill="#005FCC">${fmtW(lastW)}</text>`;
+            <text x="20" y="10" font-size="6.8" font-weight="700" fill="#111827">${fmtWPdf(firstW)}</text>
+            <text x="${Math.min(266, lastP[0] - 12).toFixed(1)}" y="${Math.max(10, lastP[1] - 6).toFixed(1)}" font-size="7.1" font-weight="700" fill="#005FCC">${fmtWPdf(lastW)}</text>`;
         } else if (hasW) {
           pdfChartSvg = `
             <circle cx="160" cy="34" r="3.2" fill="#005FCC" stroke="#111827" stroke-width="1"/>
-            <text x="160" y="25" text-anchor="middle" font-size="7.1" font-weight="700" fill="#005FCC">${fmtW(lastW)}</text>`;
+            <text x="160" y="25" text-anchor="middle" font-size="7.1" font-weight="700" fill="#005FCC">${fmtWPdf(lastW)}</text>`;
         } else {
           pdfChartSvg = `<text x="160" y="38" text-anchor="middle" font-size="7.5" fill="#6B7280">—</text>`;
         }
@@ -3655,9 +3672,13 @@
         const shotRowsHtml = [0, 1, 2, 3].map((idx) => {
           const item = shotLogs[idx];
           if (item) {
-            const doseInTitle = item.title && item.title.includes("·") ? item.title.split("·").pop().trim() : doseLbl;
-            const zoneTxt = item.site || (item.sub && item.sub.includes(":") ? item.sub.split(":").pop().trim() : "—");
-            return `<tr><td><span class="pdf-p-num ${idx === 0 ? "is-last" : ""}">${idx + 1}</span></td><td>${idx === 0 ? `<strong>${item.date}</strong>` : item.date}</td><td>${ld(doseInTitle)}</td><td>${zoneTxt}</td></tr>`;
+            const rawDose = item.doseRaw
+              ? item.doseRaw
+              : (item.isPill ? "Pill" : (item.title && item.title.includes("·") ? item.title.split("·").pop().trim() : (dr && dr.dose ? dr.dose : "")));
+            const doseTxt = ldPdf(rawDose);
+            const zoneTxt = resolvePdfShotZone(item, lang);
+            const dateTxt = formatPdfShotDate(item, lang);
+            return `<tr><td><span class="pdf-p-num ${idx === 0 ? "is-last" : ""}">${idx + 1}</span></td><td>${idx === 0 ? `<strong>${escHtml(dateTxt)}</strong>` : escHtml(dateTxt)}</td><td>${escHtml(doseTxt)}</td><td>${escHtml(zoneTxt)}</td></tr>`;
           }
           return `<tr><td><span class="pdf-p-num">${idx + 1}</span></td><td style="color:#9CA3AF">—</td><td style="color:#9CA3AF">—</td><td style="color:#9CA3AF">—</td></tr>`;
         }).join("");
@@ -3697,21 +3718,21 @@
             <div class="pdf-p-grid3">
               <div class="pdf-p-card">
                 <div style="display:flex;justify-content:space-between;font-size:6.8px;font-weight:700;text-transform:uppercase;color:#374151"><span>${L.goal}</span><span style="color:#005FCC">${diffVal}</span></div>
-                <div style="font-size:8.6px;font-weight:700;margin:2px 0">${hasW ? (hasW2 ? `${fmtW(firstW)} → ${fmtW(lastW)}` : fmtW(lastW)) : "—"}</div>
+                <div style="font-size:8.6px;font-weight:700;margin:2px 0">${hasW ? (hasW2 ? `${fmtWPdf(firstW)} → ${fmtWPdf(lastW)}` : fmtWPdf(lastW)) : "—"}</div>
                 <div class="pdf-p-bar"><div class="pdf-p-hatch-b" style="width:${pct}%"></div></div>
-                <div style="display:flex;justify-content:space-between;font-size:6.8px;font-weight:600"><span>${hasW2 ? `${pct}% ${L.goalOf}` : "—"}</span><span>${fmtW(state.targetWeightKg)}</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:6.8px;font-weight:600"><span>${hasW2 ? `${pct}% ${L.goalOf}` : "—"}</span><span>${fmtWPdf(state.targetWeightKg)}</span></div>
               </div>
 
               ${state.goalMode !== "weight" ? `
               <div class="pdf-p-card">
                 <div style="display:flex;justify-content:space-between;font-size:6.8px;font-weight:700;text-transform:uppercase;color:#374151"><span>${L.glucose}</span><span style="color:#15803D">${hasG ? tirPct + "%" : "—"}</span></div>
-                <div style="font-size:8.6px;font-weight:700;margin:2px 0">${hasG ? (gArr.length >= 2 ? `${fmtG(gArr[0])} → ${fmtG(gArr[gArr.length - 1])}` : fmtG(gArr[0])) : "—"}</div>
+                <div style="font-size:8.6px;font-weight:700;margin:2px 0">${hasG ? (gArr.length >= 2 ? `${fmtGPdf(gArr[0])} → ${fmtGPdf(gArr[gArr.length - 1])}` : fmtGPdf(gArr[0])) : "—"}</div>
                 <div class="pdf-p-bar"><div class="pdf-p-hatch-g" style="width:${hasG ? tirPct : 0}%"></div><div class="pdf-p-rest"></div></div>
                 <div style="display:flex;justify-content:space-between;font-size:6.8px;font-weight:600"><span>${normRange}</span><span>${hasG ? (100 - tirPct) + "%" : "—"}</span></div>
               </div>` : `
               <div class="pdf-p-card">
                 <div style="display:flex;justify-content:space-between;font-size:6.8px;font-weight:700;text-transform:uppercase;color:#374151"><span>${L.target}</span><span style="color:#15803D">${hasW2 ? pct + "%" : "—"}</span></div>
-                <div style="font-size:8.6px;font-weight:700;margin:2px 0">${fmtW(state.targetWeightKg)}</div>
+                <div style="font-size:8.6px;font-weight:700;margin:2px 0">${fmtWPdf(state.targetWeightKg)}</div>
                 <div class="pdf-p-bar"><div class="pdf-p-hatch-g" style="width:${pct}%"></div></div>
                 <div style="font-size:6.8px;font-weight:600">${L.goal}</div>
               </div>`}
@@ -3730,7 +3751,7 @@
             <div class="pdf-p-box" style="margin-bottom:7px;padding:4px 6px">
               <svg viewBox="0 0 320 74" width="100%" style="display:block">
                 <line x1="16" y1="62" x2="310" y2="62" stroke="#111827" stroke-width="0.9" stroke-dasharray="4 2 1 2"/>
-                <text x="18" y="59" font-size="6.8" font-weight="700" fill="#111827">${L.target}: ${fmtW(state.targetWeightKg)}</text>
+                <text x="18" y="59" font-size="6.8" font-weight="700" fill="#111827">${L.target}: ${fmtWPdf(state.targetWeightKg)}</text>
                 ${pdfChartSvg}
               </svg>
             </div>
@@ -3739,7 +3760,7 @@
             <div class="pdf-p-mid">
               <div class="pdf-p-box" style="padding:0;overflow:hidden">
                 <table class="pdf-p-tbl">
-                  <thead><tr><th>№</th><th>${L.thDate}</th><th>${L.thDose}</th><th>${L.thZone}</th></tr></thead>
+                  <thead><tr><th>${lang === "ru" ? "№" : "#"}</th><th>${L.thDate}</th><th>${L.thDose}</th><th>${L.thZone}</th></tr></thead>
                   <tbody>${shotRowsHtml}</tbody>
                 </table>
               </div>
@@ -3763,7 +3784,7 @@
                 <div style="font-size:7.6px;margin-bottom:2px">☐ ${L.c1} (${doseLbl})</div>
                 <div style="font-size:7.6px;margin-bottom:2px">☐ ${L.c2}</div>
                 <div style="font-size:7.6px;margin-bottom:3px">☐ ${L.c3}</div>
-                <div style="font-size:7.1px;color:#374151">${L.note} ${[state.visitNote && state.visitNote.trim(), ...(Array.isArray(state.visitMemos) ? state.visitMemos.map(t) : [])].filter(Boolean).join(" · ") || "____________"}</div>
+                <div style="font-size:7.1px;color:#374151">${L.note} ${[state.visitNote && state.visitNote.trim(), ...(Array.isArray(state.visitMemos) ? state.visitMemos.map(tPdf) : [])].filter(Boolean).join(" · ") || "____________"}</div>
               </div>
             </div>
           </div>
@@ -3990,6 +4011,89 @@
         if (!ALL_SYM_KEYS.includes(key)) return key;
         const lc = (typeof langCode === "string" && I18N[langCode]) ? langCode : state.lang;
         return (I18N[lc] && I18N[lc][key]) || I18N.en[key] || I18N.ru[key] || key;
+      };
+      const ALL_SITE_KEYS = SITES.map((s) => s.label);
+      const SITE_ALT_MAP = {
+        site_abdomen_left: "site_l_abd",
+        site_abdomen_right: "site_r_abd",
+        site_thigh_left: "site_l_thigh",
+        site_thigh_right: "site_r_thigh",
+        site_arm_left: "site_l_arm",
+        site_arm_right: "site_r_arm",
+        pill: "pill"
+      };
+      const SITE_TEXT_TO_KEY = {};
+      const TODAY_DATE_WORDS = new Set(["только что", "just now"]);
+      const YESTERDAY_DATE_WORDS = new Set();
+      Object.keys(I18N).forEach((langCode) => {
+        const dict = I18N[langCode] || {};
+        ALL_SITE_KEYS.forEach((key) => {
+          if (dict[key]) SITE_TEXT_TO_KEY[dict[key].toLowerCase()] = key;
+        });
+        Object.entries(SITE_ALT_MAP).forEach(([altKey, canonKey]) => {
+          if (dict[altKey]) SITE_TEXT_TO_KEY[dict[altKey].toLowerCase()] = canonKey;
+        });
+        if (dict.todayTitle) TODAY_DATE_WORDS.add(dict.todayTitle.toLowerCase());
+        if (dict.today_lower) TODAY_DATE_WORDS.add(dict.today_lower.toLowerCase());
+        if (dict.yesterday) YESTERDAY_DATE_WORDS.add(dict.yesterday.toLowerCase());
+      });
+      const siteToKey = (raw) => {
+        const s = String(raw || "").trim();
+        if (!s) return "";
+        if (ALL_SITE_KEYS.includes(s) || s === "pill") return s;
+        if (SITE_ALT_MAP[s]) return SITE_ALT_MAP[s];
+        return SITE_TEXT_TO_KEY[s.toLowerCase()] || "";
+      };
+      const resolvePdfShotZone = (item, langCode) => {
+        const lc = (typeof langCode === "string" && I18N[langCode]) ? langCode : "en";
+        const tLoc = (k) => (I18N[lc] && I18N[lc][k]) || (I18N.en && I18N.en[k]) || k;
+        if (item && typeof item.siteIdx === "number" && SITES[item.siteIdx]) {
+          return tLoc(SITES[item.siteIdx].label);
+        }
+        if (item && item.siteKey) {
+          const sk = siteToKey(item.siteKey) || item.siteKey;
+          return tLoc(sk);
+        }
+        if (item && item.isPill) return tLoc("pill");
+        const raw = item && (item.site || (item.sub && item.sub.includes(":") ? item.sub.split(":").pop().trim() : ""));
+        const mapped = siteToKey(raw);
+        if (mapped) return tLoc(mapped);
+        return raw || "—";
+      };
+      const formatPdfShotDate = (item, langCode) => {
+        const lc = (typeof langCode === "string" && I18N[langCode]) ? langCode : "en";
+        const tLoc = (k) => (I18N[lc] && I18N[lc][k]) || (I18N.en && I18N.en[k]) || k;
+        const capFirst = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+        const loc = (typeof LANG_LOCALES !== "undefined" && LANG_LOCALES[lc]) || "en-GB";
+        if (item && typeof item.ymd === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item.ymd)) {
+          const now = new Date();
+          const todayYmd = toLocalYmd(now);
+          const yestYmd = toLocalYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+          if (item.ymd === todayYmd) return tLoc("todayTitle");
+          if (item.ymd === yestYmd) return capFirst(tLoc("yesterday"));
+          const [yy, mm, dd] = item.ymd.split("-").map(Number);
+          try {
+            return new Date(yy, mm - 1, dd).toLocaleDateString(loc, { day: "numeric", month: "short" });
+          } catch (_) {
+            return `${String(dd).padStart(2, "0")}.${String(mm).padStart(2, "0")}`;
+          }
+        }
+        const raw = String((item && item.date) || "").trim();
+        const low = raw.toLowerCase();
+        if (TODAY_DATE_WORDS.has(low)) return tLoc("todayTitle");
+        if (YESTERDAY_DATE_WORDS.has(low)) return capFirst(tLoc("yesterday"));
+        const ruM = low.match(/^(\d{1,2})\s+(янв|фев|мар|апр|ма[йя]|июн|июл|авг|сен|окт|ноя|дек)/);
+        if (ruM) {
+          const ruMonths = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+          const mPrefix = ruM[2].startsWith("ма") ? "май" : ruM[2];
+          const mIdx = ruMonths.indexOf(mPrefix);
+          if (mIdx >= 0) {
+            try {
+              return new Date(new Date().getFullYear(), mIdx, Number(ruM[1])).toLocaleDateString(loc, { day: "numeric", month: "short" });
+            } catch (_) {}
+          }
+        }
+        return raw || "—";
       };
       state.todaySymptoms = [...new Set(state.todaySymptoms.map(symToKey).filter(Boolean))];
       if (state.weightDates.length !== state.weightsKg.length) {
@@ -8160,12 +8264,13 @@
           if (!state.shotsByDay) state.shotsByDay = {};
           const dr = state.drugs[state.drugIdx];
           const dKey = state.dayOfWeek;
+          const _shotYmd = toLocalYmd(getCalendarDateForDay(dKey));
           if (dr.isPill) {
             const curArr = getDayShots(dKey);
             if (curArr.length) delete state.shotsByDay[dKey];
             else {
               state.shotsByDay[dKey] = [t("pill")];
-              state.journal.unshift({ date: t("todayTitle"), group: "today", title: t("pill") + " · " + dr.name, sub: drugDose(dr), kind: "shot" });
+              state.journal.unshift({ date: t("todayTitle"), group: "today", ymd: _shotYmd, title: t("pill") + " · " + dr.name, sub: drugDose(dr), kind: "shot", isPill: true, doseRaw: dr.dose });
             }
           } else {
             const cur = state.siteIdx % SITES.length;
@@ -8178,7 +8283,7 @@
             state.penDosesLeft = Math.max(0, state.penDosesLeft - 1);
             state.lastSiteIdx = cur;
             state.siteIdx = (cur + 1) % 4;
-            state.journal.unshift({ date: t("todayTitle"), group: "today", title: t("shot") + " " + dr.name + " · " + drugDose(dr), sub: t("zone") + ": " + siteName(site), kind: "shot", site: siteName(site) });
+            state.journal.unshift({ date: t("todayTitle"), group: "today", ymd: _shotYmd, title: t("shot") + " " + dr.name + " · " + drugDose(dr), sub: t("zone") + ": " + siteName(site), kind: "shot", site: siteName(site), siteIdx: cur, siteKey: site.label, doseRaw: dr.dose });
             showToast(tf("toast_shot", siteName(site)), () => {
               if (prevArr.length) state.shotsByDay[dKey] = prevArr;
               else delete state.shotsByDay[dKey];
