@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Steady — Support</title>
-  <meta name="description" content="Steady support and FAQ." />
+  <meta name="description" content="Steady support and FAQ for web (PWA) and Telegram Mini App." />
   <style>
     :root {
       --bg: #f5f5f7; --surface: #ffffff; --ink: #1d1d1f;
@@ -36,6 +36,12 @@
     }
     h1 { font-size: 26px; letter-spacing: -0.02em; margin: 0 0 6px; }
     h2 { font-size: 18px; margin: 0 0 8px; }
+    .updated { font-size: 13px; color: var(--muted); margin: 4px 0 16px; }
+    .notice {
+      border-left: 4px solid var(--accent); background: #f0f7ff;
+      padding: 14px 16px; border-radius: 8px; margin: 18px 0;
+    }
+    .notice strong { color: var(--ink); }
     p { color: var(--muted); margin: 0 0 10px; }
     a { color: var(--accent); text-decoration: none; }
     [data-lang] { display: none; }
@@ -58,37 +64,45 @@
     <!-- ENGLISH -->
     <div data-lang="en" class="active">
       <h1>Support</h1>
+      <p class="updated">Last updated: November 26, 2026</p>
       <div class="card">
         <h2>Frequently asked questions</h2>
-        <p><strong>Is my data safe?</strong> Yes. Steady stores everything locally on your iPhone. There are no accounts, no cloud servers, and no analytics. Your data never leaves your device.</p>
-        <p><strong>How do I set a reminder?</strong> Open <em>Settings → Dose Reminders</em> and enable the toggle. Steady uses local iOS notifications only — no server is involved.</p>
-        <p><strong>How do I manage my Steady Pro subscription?</strong> Subscriptions are managed by Apple. Go to <em>Settings → [your name] → Subscriptions</em> on your iPhone to view, change, or cancel.</p>
-        <p><strong>Is Steady a medical device?</strong> No. Steady is a personal self-tracking journal. It does not diagnose, treat, or calculate medication doses. Always follow your doctor's prescription.</p>
+        <p><strong>Is my data safe?</strong> Yes. Steady stores all your health data 100% locally on your device (in your web browser or Telegram Mini App). There are no accounts, no cloud health databases, no ads, and no analytics.</p>
+        <p><strong>How do I set reminders?</strong> Reminders for upcoming doctor visits and prescription / new pen refills can be added directly to your system calendar or Google Calendar in 1 tap on the <em>Plan</em> tab.</p>
+        <p><strong>How does Steady Pro billing work?</strong> Steady Pro can be unlocked via <strong>Telegram Stars</strong> (in the Telegram Mini App) or <strong>Crypto Pay</strong> (in the web version). Steady servers do not store your payment details — only your Pro access activation status is checked. For billing help or restoration, message <a href="https://t.me/steady_glp_bot" target="_blank" rel="noopener">@steady_glp_bot</a>.</p>
+        <p><strong>How can I back up or transfer my data?</strong> Open <em>Settings → Data &amp; Reset</em> to export a JSON backup and import it anytime on another browser or device.</p>
+      </div>
+      <div class="notice">
+        <strong>Medical disclaimer.</strong> Steady is a personal self-tracking journal and is <strong>not a medical device</strong>. It does not diagnose, treat, or calculate medication doses. The medication-level curve is an illustrative estimate only. Always follow your doctor's prescription; dose adjustments must be made by a healthcare professional.
       </div>
       <div class="card">
         <h2>Contact us</h2>
-        <p>Need help? Email <a href="mailto:danecpipec@gmail.com">danecpipec@gmail.com</a> and we'll get back to you as soon as we can.</p>
+        <p>Need help or have a suggestion? Message our Telegram support bot <a href="https://t.me/steady_glp_bot" target="_blank" rel="noopener">@steady_glp_bot</a> and we'll get back to you as soon as possible.</p>
       </div>
     </div>
 
     <!-- РУССКИЙ -->
     <div data-lang="ru">
       <h1>Поддержка</h1>
+      <p class="updated">Последнее обновление: 26 ноября 2026 г.</p>
       <div class="card">
         <h2>Частые вопросы</h2>
-        <p><strong>Мои данные в безопасности?</strong> Да. Steady хранит всё локально на вашем iPhone. Нет аккаунтов, облачных серверов и аналитики. Ваши данные не покидают устройство.</p>
-        <p><strong>Как настроить напоминание?</strong> Откройте <em>Настройки → Напоминания о приёме</em> и включите переключатель. Steady использует только локальные уведомления iOS — без серверов.</p>
-        <p><strong>Как управлять подпиской Steady Pro?</strong> Подписками управляет Apple. На iPhone откройте <em>Настройки → [ваше имя] → Подписки</em>, чтобы посмотреть, изменить или отменить.</p>
-        <p><strong>Steady — это медицинское изделие?</strong> Нет. Steady — личный дневник самоконтроля. Приложение не ставит диагнозы, не лечит и не рассчитывает дозы. Всегда следуйте назначению врача.</p>
+        <p><strong>Мои данные в безопасности?</strong> Да. Steady хранит все ваши записи о здоровье на 100% локально на вашем устройстве (в браузере или Telegram Mini App). Нет аккаунтов, облачных баз здоровья, рекламы и аналитики.</p>
+        <p><strong>Как добавить напоминания?</strong> Напоминания о визите к врачу и о рецепте / новой шприц-ручке добавляются в системный или Google Календарь в 1 нажатие на вкладке <em>«Курс»</em>.</p>
+        <p><strong>Как работает оплата Steady Pro?</strong> Доступ Steady Pro можно оформить через <strong>Telegram Stars</strong> (в Telegram Mini App) или <strong>Crypto Pay</strong> (в веб-версии). Серверы Steady не хранят платёжные реквизиты — проверяется только статус активации доступа. По любым вопросам оплаты и восстановления доступа напишите в <a href="https://t.me/steady_glp_bot" target="_blank" rel="noopener">@steady_glp_bot</a>.</p>
+        <p><strong>Как сделать резервную копию данных?</strong> Откройте <em>Настройки → Данные и сброс</em>, чтобы сохранить резервную копию в JSON и при необходимости перенести её на другое устройство.</p>
+      </div>
+      <div class="notice">
+        <strong>Медицинский дисклеймер.</strong> Steady — личный дневник самоконтроля и <strong>не является медицинским изделием</strong>. Приложение не ставит диагнозы, не лечит и не рассчитывает дозы. Кривая уровня препарата носит ориентировочный характер. Всегда следуйте назначению врача; корректировку дозировки должен выполнять медицинский специалист.
       </div>
       <div class="card">
         <h2>Связаться с нами</h2>
-        <p>Нужна помощь? Напишите на <a href="mailto:danecpipec@gmail.com">danecpipec@gmail.com</a>, и мы ответим как можно скорее.</p>
+        <p>Нужна помощь или есть предложение? Напишите в наш Telegram-бот поддержки <a href="https://t.me/steady_glp_bot" target="_blank" rel="noopener">@steady_glp_bot</a>, и мы ответим как можно скорее.</p>
       </div>
     </div>
   </main>
 
-  <footer>© 2026 Steady. 100% on-device · no servers · no tracking.</footer>
+  <footer>© 2026 Steady. 100% on-device · no cloud health database · no tracking.</footer>
 
   <script>
     function setLang(lang) {
