@@ -417,7 +417,24 @@
       width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
       padding-bottom: 10px; border-bottom: 0.5px solid var(--sep);
     }
-    .body-svg { width: 100%; max-width: 240px; height: auto; display: block; }
+    .shot-sil-stage {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 236px;
+      background: var(--surface-2);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .body-svg {
+      height: 100%;
+      width: auto;
+      max-width: 100%;
+      display: block;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18px, #000 calc(100% - 18px), transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, #000 18px, #000 calc(100% - 18px), transparent 100%);
+    }
     .body-base { fill: rgba(120, 120, 128, .16); stroke: rgba(120, 120, 128, .28); stroke-width: 1.2; }
     .muscle-line { fill: none; stroke: rgba(120, 120, 128, .35); stroke-width: 1.2; stroke-linecap: round; }
     .muscle-zone { fill: rgba(120, 120, 128, .08); stroke: rgba(120, 120, 128, .22); stroke-width: 1; }
@@ -3884,7 +3901,7 @@
           return { ...st, cx, cy, idx };
         }).filter((st) => st.view === state.bodyView);
         const bodySvg = `
-          <svg class="body-svg" viewBox="80 20 290 540" aria-label="${t("map_aria")}">
+          <svg class="body-svg" viewBox="95 98 260 322" aria-label="${t("map_aria")}">
             <path d="${curFill}" fill="rgba(142,142,147,.22)" fill-rule="evenodd"/>
             <path d="${curLine}" fill="rgba(142,142,147,.65)" fill-rule="evenodd"/>
             ${visibleSites.map((st) => `
@@ -3903,7 +3920,7 @@
             <button class="${state.bodyView === "front" ? "is-active" : ""}" data-bview="front" type="button">${t("front")}</button>
             <button class="${state.bodyView === "back" ? "is-active" : ""}" data-bview="back" type="button">${t("back_view")}</button>
           </div>
-          <div style="display:flex;justify-content:center;background:var(--surface-2);border-radius:14px;padding:8px 0">
+          <div class="shot-sil-stage" id="shotSilStage">
             ${bodySvg}
           </div>
           <div class="map-legend" style="margin:10px 0 6px">
