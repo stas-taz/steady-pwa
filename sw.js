@@ -6,7 +6,7 @@
 //     поднимать вручную при каждом деплое — обновления приходят сами.
 // CACHE_VERSION используется только для очистки старых кэшей.
 
-const CACHE_VERSION = 'steady-v44';
+const CACHE_VERSION = 'steady-v45';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 const PRECACHE = [
