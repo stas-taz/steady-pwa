@@ -313,7 +313,7 @@
       transition: color 180ms ease, transform 110ms ease;
     }
     .r-day:active { transform: scale(.95); }
-    .r-day strong { display: block; font-size: 15px; font-weight: 700; line-height: 20px; color: var(--ink); font-variant-numeric: tabular-nums; transition: color 200ms ease; }
+    .r-day strong { display: block; font-size: 15px; font-weight: 700; line-height: 20px; letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums; transition: color 200ms ease; }
     .r-day.is-shot {
       background: rgba(22, 163, 74, 0.13); color: var(--green);
       box-shadow: inset 0 0 0 1.8px rgba(22, 163, 74, 0.45);
@@ -3830,6 +3830,7 @@
         pointDoses: [],
         lastWeightYmd: "",
         lastGlucoseYmd: "",
+        startedYmd: "",
         journal: []
       };
 
@@ -4455,6 +4456,10 @@
         const realAnchor = getTodayAnchorDay();
         const isNewDay = !state.lastOpenedYmd || state.lastOpenedYmd !== todayYmd;
         let changed = false;
+        if (state.onboarded && !state.startedYmd) {
+          state.startedYmd = state.lastOpenedYmd || todayYmd;
+          changed = true;
+        }
         if (state.todayAnchorDay !== realAnchor) {
           state.todayAnchorDay = realAnchor;
           changed = true;
@@ -4557,8 +4562,9 @@
         const schedDays = (Array.isArray(state.shotDays) && state.shotDays.length) ? state.shotDays : [state.shotDay || 1];
         const todayAnchor = getTodayAnchorDay();
         const isFuture = isDayFuture(dayNum);
+        const startedYmd = state.startedYmd || toLocalYmd(new Date());
         const hasAnyShotFrom = (d) => Object.keys(state.shotsByDay || {}).some((k) => Number(k) >= d && getDayShots(Number(k)).length > 0);
-        const isDayOverdue = (d) => !state.coursePaused && !dr.isPill && schedDays.includes(d) && d < todayAnchor && getDayShots(d).length === 0 && !hasAnyShotFrom(d);
+        const isDayOverdue = (d) => !state.coursePaused && !dr.isPill && schedDays.includes(d) && d < todayAnchor && toLocalYmd(getCalendarDateForDay(d)) >= startedYmd && getDayShots(d).length === 0 && !hasAnyShotFrom(d);
         const isDayDue = (d) => !state.coursePaused && !dr.isPill && schedDays.includes(d) && d >= todayAnchor && getDayShots(d).length === 0;
 
         const dayShots = getDayShots(dayNum);
@@ -4749,10 +4755,11 @@
                   due ? "is-due" : "",
                   state.coursePaused ? "is-paused" : ""
                 ].filter(Boolean).join(" ");
+                const dateNum = getCalendarDateForDay(dayNum).getDate();
                 return `
                   <button type="button" class="${cls}" data-pick-day="${dayNum}" style="--phase-col:${phaseCol}">
                     <span>${d}</span>
-                    <strong>${dayNum}</strong>
+                    <strong>${dateNum}</strong>
                     ${isAnchorToday ? `<span class="today-dot" aria-hidden="true"></span>` : ""}
                     ${badgeHtml}
                   </button>`;
@@ -7920,14 +7927,20 @@
           const _toKg = (v) => state.usUnits ? v / 2.20462 : v;
           const _sw = parseFloat(state.obStartWeight);
           const _tw = parseFloat(state.obTargetWeight);
+          const _todayYmd = toLocalYmd(new Date());
           if (!isNaN(_sw) && _toKg(_sw) > 20 && !state.weightsKg.length) {
             state.weightsKg.push(_toKg(_sw));
             state.weightDates.push(t("todayTitle"));
             state.pointDoses.push(_dr ? _dr.dose : "");
+            state.lastWeightYmd = _todayYmd;
           }
           if (!isNaN(_tw) && _toKg(_tw) > 20) {
             state.targetWeightKg = _toKg(_tw);
           }
+          state.startedYmd = _todayYmd;
+          state.lastOpenedYmd = _todayYmd;
+          state.todayAnchorDay = getTodayAnchorDay();
+          state.dayOfWeek = state.todayAnchorDay;
           state.onboarded = true;
           render();
           if (state.proPreviewMode && !state.isPro) {
@@ -7943,7 +7956,7 @@
         }
         if (e.target.closest("#resetDemoBtn")) {
           state.weightsKg = []; state.glucoseMmol = []; state.weightDates = []; state.pointDoses = [];
-          state.lastWeightYmd = ""; state.lastGlucoseYmd = "";
+          state.lastWeightYmd = ""; state.lastGlucoseYmd = ""; state.startedYmd = "";
           state.journal = []; state.shotsByDay = {}; state.todaySymptoms = []; state.feelNotesByDay = {};
           state.protein = 0; state.fiber = 0; state.water = 0;
           state.penDosesLeft = 4; state.lastSiteIdx = 0; state.isPro = false; state.proPreviewMode = false;
