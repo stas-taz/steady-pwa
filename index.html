@@ -673,15 +673,107 @@
     .j-row {
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
       padding: 12px 14px; border-top: 0.5px solid var(--sep);
+      transition: background .12s ease;
     }
     .j-row:first-child { border-top: 0; }
+    .j-row.is-expandable { cursor: pointer; }
+    .j-row.is-expandable:active { background: var(--surface-2); }
     .j-left { display: flex; align-items: center; gap: 11px; min-width: 0; flex: 1; }
+    .j-text-col { min-width: 0; flex: 1; }
     .j-ico {
       width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
       display: inline-flex; align-items: center; justify-content: center;
     }
-    .j-title { font-size: 14.5px; font-weight: 600; line-height: 1.25; }
-    .j-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+    .j-title {
+      font-size: 14.5px; font-weight: 600; line-height: 1.25;
+      overflow-wrap: anywhere; word-break: break-word;
+    }
+    .j-sub {
+      font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .j-chev {
+      display: none;
+      color: var(--accent);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .j-row.is-expandable .j-chev { display: inline-flex; align-items: center; }
+    .note-char-counter {
+      text-align: right;
+      font-size: 11.5px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      margin-top: 4px;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: opacity 180ms ease, max-height 180ms ease, color 150ms ease;
+    }
+    .note-char-counter.is-visible { max-height: 20px; opacity: 1; }
+    .note-char-counter.is-warn { color: #D97706; }
+    :root[data-theme="dark"] .note-char-counter.is-warn { color: #FF9F0A; }
+
+    #noteReadModal .note-read-sheet {
+      height: min(62vh, 460px);
+      max-height: 75vh;
+      padding: 10px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #noteReadModal .sheet-grabber { flex: 0 0 auto; margin: 0 auto 10px; }
+    .nr-head {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .nr-head-text { min-width: 0; flex: 1; }
+    .nr-title {
+      display: block;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -.015em;
+      color: var(--ink);
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+    .nr-sub {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 3px;
+      line-height: 1.3;
+    }
+    .nr-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: var(--sub, var(--surface-2));
+      border-radius: 16px;
+      padding: 14px;
+      color: var(--ink);
+      font-size: 15.5px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    .nr-foot { flex: 0 0 auto; padding-top: 12px; }
     .j-del-btn {
       width: 24px; height: 24px; border-radius: 50%; border: 0; flex-shrink: 0;
       background: var(--red); color: #fff; font: inherit; font-size: 15px; font-weight: 700;
@@ -1259,7 +1351,7 @@
       transition: max-height 240ms cubic-bezier(0.32, 0.72, 0, 1), opacity 180ms ease, margin-top 200ms ease;
     }
     .feel-note-wrap.is-visible {
-      max-height: 180px; opacity: 1; margin-top: 14px;
+      max-height: 220px; opacity: 1; margin-top: 14px;
       pointer-events: auto;
     }
     .feel-note-lbl {
@@ -2621,7 +2713,8 @@
         <button class="chip" data-ntag="tag_nutrition" data-i18n="tag_nutrition" type="button">Питание</button>
         <button class="chip" data-ntag="tag_side" data-i18n="tag_side" type="button">Побочка</button>
       </div>
-      <textarea class="input-box" id="noteTextInp" rows="3" data-i18n-ph="note_ph" placeholder="Например: после 0.5 мг лёгкая тошнота утром, помогла вода с имбирём" style="height:auto;padding:10px 12px;resize:none"></textarea>
+      <textarea class="input-box" id="noteTextInp" rows="3" maxlength="500" data-i18n-ph="note_ph" placeholder="Например: после 0.5 мг лёгкая тошнота утром, помогла вода с имбирём" style="height:auto;padding:10px 12px;resize:none"></textarea>
+      <div class="note-char-counter" id="noteTextCounter" aria-live="polite"></div>
       <button class="primary-btn" id="saveNoteBtn" type="button" data-i18n="add_to_journal">Добавить в журнал</button>
     </div>
   </div>
@@ -2812,6 +2905,23 @@
     <div class="modal-sheet feel-sheet">
       <div class="sheet-grabber"></div>
       <div id="feelSheetBody" class="feel-sheet-inner"></div>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="noteReadModal" hidden>
+    <div class="modal-sheet note-read-sheet">
+      <div class="sheet-grabber"></div>
+      <div class="nr-head">
+        <div class="nr-head-text">
+          <strong class="nr-title" id="noteReadTitle"></strong>
+          <div class="nr-sub" id="noteReadSub"></div>
+        </div>
+        <button class="sheet-close-btn" id="closeNoteReadModal" type="button" data-i18n-aria="close" aria-label="Закрыть">×</button>
+      </div>
+      <div class="nr-body" id="noteReadText"></div>
+      <div class="nr-foot">
+        <button class="primary-btn" id="copyNoteReadBtn" type="button" style="margin-top:0" data-i18n="copy">Скопировать</button>
+      </div>
     </div>
   </div>
 
@@ -5108,15 +5218,30 @@
         return j.title;
       }
 
-      function renderJournalItem(j) {
+      function updateNoteCounter(ta, counterId) {
+        if (!ta) return;
+        const el = document.getElementById(counterId);
+        if (!el) return;
+        const len = (ta.value || "").length;
+        el.textContent = `${len} / 500`;
+        el.classList.toggle("is-visible", len >= 350);
+        el.classList.toggle("is-warn", len >= 480);
+      }
+
+      let noteReadFullText = "";
+      function getJournalEntryDisplay(j) {
         let title = journalItemTitle(j);
         let sub = j.sub || "";
-        const dateLbl = (j.isTodaySym && j.group === "today") ? t("todayTitle") : j.date;
+        const dateLbl = (j.isTodaySym && j.group === "today") ? t("todayTitle") : (j.date || "");
+        let metaLine = dateLbl;
+        let fullText = sub;
+
         if (j.kind === "sym" && Array.isArray(j.symKeys) && j.dayOfWeek != null) {
-          sub = tf("drug_day_n", j.dayOfWeek, 7) + " · " + phaseBadge(DAY_PHASE[j.dayOfWeek] || DAY_PHASE[1]);
-          if (j.note) sub += " · " + escHtml(j.note);
-        }
-        if (j.kind === "metric") {
+          const phaseLine = tf("drug_day_n", j.dayOfWeek, 7) + " · " + phaseBadge(DAY_PHASE[j.dayOfWeek] || DAY_PHASE[1]);
+          metaLine = [dateLbl, phaseLine].filter(Boolean).join(" · ");
+          sub = j.note ? `${phaseLine} · ${j.note}` : phaseLine;
+          fullText = j.note || sub;
+        } else if (j.kind === "metric") {
           const ctxStr = j.glucoseCtx ? t(j.glucoseCtx) : "";
           if (j.weightKg != null) {
             title = tf("metric_title", fmtW(j.weightKg));
@@ -5130,19 +5255,61 @@
             title = `${t("sugar_lbl")}: ${fmtG(j.glucoseMmol)}`;
             sub = [ctxStr, j.sub].filter(Boolean).join(" · ");
           }
+          fullText = sub;
         }
+        return { title, sub, dateLbl, metaLine, fullText };
+      }
+
+      function openNoteReadModal(idx) {
+        const j = state.journal[idx];
+        if (!j) return;
+        const info = getJournalEntryDisplay(j);
+        noteReadFullText = info.fullText || info.sub || info.title || "";
+        const titleEl = $("#noteReadTitle");
+        const subEl = $("#noteReadSub");
+        const bodyEl = $("#noteReadText");
+        if (titleEl) titleEl.textContent = info.title;
+        if (subEl) subEl.textContent = info.metaLine;
+        if (bodyEl) {
+          bodyEl.textContent = noteReadFullText;
+          bodyEl.scrollTop = 0;
+        }
+        $("#noteReadModal").hidden = false;
+      }
+
+      function markExpandableJournalRows() {
+        if (state.tab !== "log") return;
+        document.querySelectorAll(".j-row[data-log-idx]").forEach((row) => {
+          const subEl = row.querySelector("[data-j-clamp]");
+          const isTruncated = !!(subEl && (subEl.scrollHeight > subEl.clientHeight + 1));
+          const canExpand = isTruncated && !state.logEditMode;
+          row.classList.toggle("is-expandable", canExpand);
+          if (canExpand) {
+            row.setAttribute("role", "button");
+            row.setAttribute("tabindex", "0");
+          } else {
+            row.removeAttribute("role");
+            row.removeAttribute("tabindex");
+          }
+        });
+      }
+
+      function renderJournalItem(j) {
+        const { title, sub, dateLbl } = getJournalEntryDisplay(j);
         return `
-          <div class="j-row">
+          <div class="j-row" data-log-idx="${j.idx}">
             <div class="j-left">
               ${journalIcon(j.kind)}
-              <div style="min-width:0">
-                <div class="j-title">${title}</div>
-                ${sub ? `<div class="j-sub">${sub}</div>` : ""}
+              <div class="j-text-col">
+                <div class="j-title">${escHtml(title)}</div>
+                ${sub ? `<div class="j-sub" data-j-clamp="1">${escHtml(sub)}</div>` : ""}
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-              <span style="font-size:12px;color:var(--muted);white-space:nowrap">${dateLbl}</span>
-              ${state.logEditMode ? `<button class="j-del-btn" data-del-log="${j.idx}" type="button" aria-label="Удалить">−</button>` : ""}
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <span style="font-size:12px;color:var(--muted);white-space:nowrap">${escHtml(dateLbl)}</span>
+              ${state.logEditMode
+                ? `<button class="j-del-btn" data-del-log="${j.idx}" type="button" aria-label="Удалить">−</button>`
+                : `<span class="j-chev" aria-hidden="true">›</span>`}
             </div>
           </div>`;
       }
@@ -5700,7 +5867,8 @@
 
             <div class="vs-field" style="margin-bottom:4px">
               <label class="vs-field-lbl" for="vsNoteInput">${t("note")}</label>
-              <textarea class="vs-textarea" id="vsNoteInput" rows="3" placeholder="${escHtml(t("visit_note_ph"))}">${escHtml(d.note)}</textarea>
+              <textarea class="vs-textarea" id="vsNoteInput" rows="3" maxlength="500" placeholder="${escHtml(t("visit_note_ph"))}">${escHtml(d.note)}</textarea>
+              <div class="note-char-counter${(d.note || "").length >= 350 ? " is-visible" : ""}${(d.note || "").length >= 480 ? " is-warn" : ""}" id="vsNoteCounter" aria-live="polite">${(d.note || "").length} / 500</div>
             </div>
           </div>
           <div class="vs-foot">
@@ -6724,7 +6892,8 @@
             </div>
             <div class="feel-note-wrap${hasNeg ? " is-visible" : ""}" id="feelNoteWrap" aria-hidden="${hasNeg ? "false" : "true"}">
               <label class="feel-note-lbl" for="feelNoteInput">${t("feel_note_lbl")}</label>
-              <textarea class="feel-note-input" id="feelNoteInput" rows="2" placeholder="${escHtml(t("feel_note_ph"))}">${escHtml(feelDraft.note || "")}</textarea>
+              <textarea class="feel-note-input" id="feelNoteInput" rows="2" maxlength="500" placeholder="${escHtml(t("feel_note_ph"))}">${escHtml(feelDraft.note || "")}</textarea>
+              <div class="note-char-counter${(feelDraft.note || "").length >= 350 ? " is-visible" : ""}${(feelDraft.note || "").length >= 480 ? " is-warn" : ""}" id="feelNoteCounter" aria-live="polite">${(feelDraft.note || "").length} / 500</div>
             </div>
           </div>
           <div class="feel-foot">
@@ -6738,7 +6907,7 @@
         const syms = [...new Set(feelDraft.syms.map(symToKey).filter(Boolean))];
         const hasNeg = syms.some((k) => k !== "sym_great");
         const dayYmd = toLocalYmd(getCalendarDateForDay(state.dayOfWeek));
-        const cleanNote = hasNeg ? String(feelDraft.note || "").trim() : "";
+        const cleanNote = hasNeg ? String(feelDraft.note || "").trim().slice(0, 500) : "";
 
         state.todaySymptoms = syms;
         if (!state.feelNotesByDay || typeof state.feelNotesByDay !== "object") state.feelNotesByDay = {};
@@ -7501,7 +7670,10 @@
         const view = $("#view");
         if (state.tab === "today") view.innerHTML = renderToday();
         else if (state.tab === "chart") view.innerHTML = renderChart();
-        else if (state.tab === "log") view.innerHTML = renderLog();
+        else if (state.tab === "log") {
+          view.innerHTML = renderLog();
+          requestAnimationFrame(() => markExpandableJournalRows());
+        }
         else view.innerHTML = renderCare();
 
         document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.tab === state.tab));
@@ -7519,6 +7691,8 @@
       window.addEventListener("resize", () => {
         updateObFooterShadow();
         if (!$("#logModal").hidden && logDraft) drawLogRuler();
+        if (!$("#goalsModal").hidden && goalsDraft) drawGoalsRuler();
+        if (state.tab === "log") markExpandableJournalRows();
       });
 
       document.addEventListener("click", (e) => {
@@ -7915,11 +8089,19 @@
         if (lf) { state.logFilter = lf.dataset.lfilter; render(); return; }
         if (e.target.closest("#toggleLogEditBtn")) { state.logEditMode = !state.logEditMode; render(); return; }
         if (e.target.closest("#openNoteBtn")) {
-          $("#noteTextInp").value = "";
+          const inp = $("#noteTextInp");
+          inp.value = "";
+          updateNoteCounter(inp, "noteTextCounter");
           $("#noteModal").hidden = false;
           return;
         }
         if (e.target.id === "closeNoteModal" || e.target.id === "noteModal") { $("#noteModal").hidden = true; return; }
+        if (e.target.id === "closeNoteReadModal" || e.target.id === "noteReadModal") { $("#noteReadModal").hidden = true; return; }
+        if (e.target.closest("#copyNoteReadBtn")) {
+          copyTextReliable(noteReadFullText || "");
+          showToast(t("copied"));
+          return;
+        }
         const nt = e.target.closest("[data-ntag]");
         if (nt) {
           state.noteTag = nt.dataset.ntag;
@@ -7927,7 +8109,7 @@
           return;
         }
         if (e.target.id === "saveNoteBtn") {
-          const txt = ($("#noteTextInp").value || "").trim();
+          const txt = ($("#noteTextInp").value || "").trim().slice(0, 500);
           if (!txt) { showToast(t("toast_write_note")); return; }
           const noteItem = { date: t("todayTitle"), group: "today", title: t(state.noteTag || "note"), sub: txt, kind: "sym" };
           state.journal.unshift(noteItem);
@@ -7952,6 +8134,11 @@
             render();
             showToast(t("toast_restored"));
           });
+          return;
+        }
+        const expRow = e.target.closest(".j-row.is-expandable[data-log-idx]");
+        if (expRow && !state.logEditMode) {
+          openNoteReadModal(Number(expRow.dataset.logIdx));
           return;
         }
         if (e.target.closest("#openSettingsBtn") || e.target.closest("#openSettingsTodayBtn") || e.target.closest("[data-open-settings]")) { state.settingsSub = null; renderSettings(); $("#settingsScreen").hidden = false; return; }
@@ -8493,7 +8680,15 @@
 
       document.addEventListener("input", (e) => {
         if (e.target.id === "vsNoteInput" && visitDraft) {
-          visitDraft.note = e.target.value;
+          visitDraft.note = String(e.target.value || "").slice(0, 500);
+          updateNoteCounter(e.target, "vsNoteCounter");
+        }
+        if (e.target.id === "feelNoteInput" && feelDraft) {
+          feelDraft.note = String(e.target.value || "").slice(0, 500);
+          updateNoteCounter(e.target, "feelNoteCounter");
+        }
+        if (e.target.id === "noteTextInp") {
+          updateNoteCounter(e.target, "noteTextCounter");
         }
         if (e.target.id === "vsDateInput" && visitDraft) {
           visitDraft.date = e.target.value;
