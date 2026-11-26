@@ -4381,7 +4381,8 @@
         </svg>`;
       }
 
-      function updateDailyRingsUI() {
+      function updateDailyRingsUI(forceZero) {
+        const zeroed = (typeof forceZero === "boolean") ? forceZero : isSelectedFutureDay();
         const metrics = [["protein", state.proteinGoal], ["fiber", state.fiberGoal], ["water", state.waterGoal]];
         let any = false;
         for (const [key, goalRaw] of metrics) {
@@ -4389,7 +4390,7 @@
           const lap2 = document.querySelector(`[data-ring-lap2="${key}"]`);
           if (!lap1 || !lap2) continue;
           any = true;
-          const val = state[key] || 0;
+          const val = zeroed ? 0 : (state[key] || 0);
           const goal = Math.max(1, goalRaw);
           const ratio = val / goal;
           const pct = Math.round(ratio * 100);
@@ -4469,11 +4470,12 @@
           return days[Math.max(0, Math.min(6, (Number(dayNum) || 1) - 1))];
         }
       }
-      function renderTodayFeelRowHtml(dayNum) {
-        const syms = Array.isArray(state.todaySymptoms) ? state.todaySymptoms : [];
+      function renderTodayFeelRowHtml(dayNum, isFuture) {
+        const future = (typeof isFuture === "boolean") ? isFuture : isDayFuture(dayNum);
+        const syms = future ? [] : (Array.isArray(state.todaySymptoms) ? state.todaySymptoms : []);
         const isCalmOnly = syms.length === 1 && syms[0] === "sym_great";
         const negSyms = syms.filter((k) => k !== "sym_great");
-        const feelNote = negSyms.length ? getFeelNoteForDay(dayNum) : "";
+        const feelNote = (!future && negSyms.length) ? getFeelNoteForDay(dayNum) : "";
         const heartSvg = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
         const chevSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
 
@@ -4519,9 +4521,10 @@
           if (isFuture) ringsEl.setAttribute("aria-disabled", "true");
           else ringsEl.removeAttribute("aria-disabled");
         }
+        updateDailyRingsUI(!!isFuture);
         const feelRowWrap = $("#todayFeelRowWrap");
         if (feelRowWrap) {
-          feelRowWrap.innerHTML = renderTodayFeelRowHtml(dayNum || state.dayOfWeek);
+          feelRowWrap.innerHTML = renderTodayFeelRowHtml(dayNum || state.dayOfWeek, !!isFuture);
         }
       }
       function getTodayDayContext(dayNum) {
@@ -4803,13 +4806,16 @@
               const pIco = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c3 0 6 2.5 6 7 0 4.5-2.5 13-6 13S6 13.5 6 9c0-4.5 3-7 6-7Z"/><path d="M9 10c1 1 5 1 6 0"/></svg>`;
               const fIco = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
               const wIco = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`;
+              const dispP = ctx.isFuture ? 0 : state.protein;
+              const dispF = ctx.isFuture ? 0 : state.fiber;
+              const dispW = ctx.isFuture ? 0 : state.water;
               return `<div class="ring-grid">
-                ${mkRing("protein", t("protein"), state.protein, state.proteinGoal, `${state.protein}/${state.proteinGoal} ${gramUnit()}`, "+25 " + gramUnit(), 25, "var(--accent)", "var(--accent-soft)", pIco)}
-                ${mkRing("fiber", t("fiber"), state.fiber, state.fiberGoal, `${state.fiber}/${state.fiberGoal} ${gramUnit()}`, "+5 " + gramUnit(), 5, "var(--orange)", "var(--orange-soft)", fIco)}
-                ${mkRing("water", t("water"), state.water, state.waterGoal, `${(state.water/1000).toFixed(1)}/${(state.waterGoal/1000).toFixed(1)} ${literUnit()}`, "+250", 250, "var(--teal)", "var(--teal-soft)", wIco)}
+                ${mkRing("protein", t("protein"), dispP, state.proteinGoal, `${dispP}/${state.proteinGoal} ${gramUnit()}`, "+25 " + gramUnit(), 25, "var(--accent)", "var(--accent-soft)", pIco)}
+                ${mkRing("fiber", t("fiber"), dispF, state.fiberGoal, `${dispF}/${state.fiberGoal} ${gramUnit()}`, "+5 " + gramUnit(), 5, "var(--orange)", "var(--orange-soft)", fIco)}
+                ${mkRing("water", t("water"), dispW, state.waterGoal, `${(dispW/1000).toFixed(1)}/${(state.waterGoal/1000).toFixed(1)} ${literUnit()}`, "+250", 250, "var(--teal)", "var(--teal-soft)", wIco)}
               </div>`;
             })()}
-            <div id="todayFeelRowWrap">${renderTodayFeelRowHtml(state.dayOfWeek)}</div>
+            <div id="todayFeelRowWrap">${renderTodayFeelRowHtml(state.dayOfWeek, ctx.isFuture)}</div>
           </div>
 
           <div class="card" style="padding:12px 14px">
