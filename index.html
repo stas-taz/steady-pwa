@@ -4649,45 +4649,83 @@
         }
       }
 
-      function downloadRefillIcs() {
-        const dr = state.drugs[state.drugIdx];
-        const { endDateFmt, remindDateFmt, remindDateObj } = getSupplyDates(dr);
+      function addCalendarEvent({ title, dateIso, details, filename }) {
+        const m = String(dateIso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!m) return;
+        const y = Number(m[1]), mo = Number(m[2]), da = Number(m[3]);
+        const startDt = new Date(y, mo - 1, da);
+        const endDt = new Date(y, mo - 1, da + 1);
         const pad = (n) => String(n).padStart(2, "0");
-        const y = remindDateObj.getFullYear();
-        const m = pad(remindDateObj.getMonth() + 1);
-        const d = pad(remindDateObj.getDate());
-        const dtStart = `${y}${m}${d}T100000`;
-        const dtEnd = `${y}${m}${d}T103000`;
-        const now = new Date();
-        const dtStamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}T${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-        const esc = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
-        const summary = esc(`${t("refill_sheet_title")}: ${dr.name} (${drugDose(dr)})`);
-        const desc = esc(tf("refill_copy_text", dr.name, drugDose(dr), remindDateFmt, endDateFmt));
+        const ymd = (dt) => `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}`;
+        const startYmd = ymd(startDt);
+        const endYmd = ymd(endDt);
+        const cleanTitle = String(title || "Steady").trim();
+        const cleanDetails = String(details || "").trim();
+        const fallbackText = `${cleanTitle} (${fmtVisitShortDate(dateIso) || dateIso})${cleanDetails ? "\n" + cleanDetails : ""}`;
+
+        const tgWebApp = window.Telegram && window.Telegram.WebApp;
+        if (tgWebApp && tgWebApp.initData) {
+          const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(cleanTitle)}&dates=${startYmd}/${endYmd}&details=${encodeURIComponent(cleanDetails)}`;
+          try {
+            if (typeof tgWebApp.openLink === "function") tgWebApp.openLink(gcalUrl);
+            else window.open(gcalUrl, "_blank", "noopener");
+            showToast(t("visit_cal_added"));
+          } catch (e) {
+            copyTextSafe(fallbackText);
+            showToast(t("toast_copied"));
+          }
+          return;
+        }
+
+        const escIcs = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+        const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
         const ics = [
           "BEGIN:VCALENDAR",
           "VERSION:2.0",
-          "PRODID:-//Steady//Steady//EN",
+          "PRODID:-//Steady//Calendar Event//EN",
           "BEGIN:VEVENT",
-          `UID:refill-${Date.now()}@steady.app`,
-          `DTSTAMP:${dtStamp}`,
-          `DTSTART:${dtStart}`,
-          `DTEND:${dtEnd}`,
-          `SUMMARY:${summary}`,
-          `DESCRIPTION:${desc}`,
+          `UID:steady-ev-${startYmd}-${Date.now()}@steady.app`,
+          `DTSTAMP:${stamp}`,
+          `DTSTART;VALUE=DATE:${startYmd}`,
+          `DTEND;VALUE=DATE:${endYmd}`,
+          `SUMMARY:${escIcs(cleanTitle)}`,
+          `DESCRIPTION:${escIcs(cleanDetails)}`,
           "BEGIN:VALARM",
+          "TRIGGER:-P1D",
           "ACTION:DISPLAY",
-          "TRIGGER:-PT0M",
-          `DESCRIPTION:${summary}`,
+          `DESCRIPTION:${escIcs(cleanTitle)}`,
           "END:VALARM",
           "END:VEVENT",
           "END:VCALENDAR"
         ].join("\r\n");
-        const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url; a.download = "steady_refill_reminder.ics";
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        try {
+          const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename || "steady-event.ics";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          showToast(t("visit_cal_added"));
+        } catch (e) {
+          copyTextSafe(fallbackText);
+          showToast(t("toast_copied"));
+        }
+      }
+
+      function handleRefillAddToCalendar() {
+        const dr = state.drugs[state.drugIdx];
+        const { endDateFmt, remindDateFmt, remindDateObj } = getSupplyDates(dr);
+        const pad = (n) => String(n).padStart(2, "0");
+        const dateIso = `${remindDateObj.getFullYear()}-${pad(remindDateObj.getMonth() + 1)}-${pad(remindDateObj.getDate())}`;
+        addCalendarEvent({
+          title: `${t("refill_sheet_title")}: ${dr.name} (${drugDose(dr)})`,
+          dateIso,
+          details: tf("refill_copy_text", dr.name, drugDose(dr), remindDateFmt, endDateFmt),
+          filename: "steady-refill-reminder.ics"
+        });
       }
 
       function escHtml(s) {
@@ -5084,72 +5122,16 @@
 
       function handleVisitAddToCalendar() {
         if (!visitDraft || !visitDraft.date) return;
-        const m = String(visitDraft.date).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        if (!m) return;
-        const y = Number(m[1]), mo = Number(m[2]), da = Number(m[3]);
-        const startDt = new Date(y, mo - 1, da);
-        const endDt = new Date(y, mo - 1, da + 1);
-        const pad = (n) => String(n).padStart(2, "0");
-        const ymd = (dt) => `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}`;
-        const startYmd = ymd(startDt);
-        const endYmd = ymd(endDt);
-        const title = t("visit_cal_event_title");
         const detailsParts = [];
         if (!visitDraft.paused) detailsParts.push(`${visitDraft.medName} · ${fmtDoseVal(visitDraft.dose, visitDraft.unit)}`);
         if (visitDraft.memos.length) detailsParts.push(visitDraft.memos.map(t).join(", "));
         if (visitDraft.note && visitDraft.note.trim()) detailsParts.push(visitDraft.note.trim());
-        const details = detailsParts.join("\n");
-
-        const tgWebApp = window.Telegram && window.Telegram.WebApp;
-        if (tgWebApp && tgWebApp.initData) {
-          const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startYmd}/${endYmd}&details=${encodeURIComponent(details)}`;
-          try {
-            if (typeof tgWebApp.openLink === "function") tgWebApp.openLink(gcalUrl);
-            else window.open(gcalUrl, "_blank", "noopener");
-            showToast(t("visit_cal_added"));
-          } catch (e) {
-            copyTextSafe(`${title} (${fmtVisitShortDate(visitDraft.date)})${details ? "\n" + details : ""}`);
-            showToast(t("toast_copied"));
-          }
-          return;
-        }
-
-        const escIcs = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
-        const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-        const ics = [
-          "BEGIN:VCALENDAR",
-          "VERSION:2.0",
-          "PRODID:-//Steady//Doctor Visit//EN",
-          "BEGIN:VEVENT",
-          `UID:steady-visit-${startYmd}-${Date.now()}@steady.app`,
-          `DTSTAMP:${stamp}`,
-          `DTSTART;VALUE=DATE:${startYmd}`,
-          `DTEND;VALUE=DATE:${endYmd}`,
-          `SUMMARY:${escIcs(title)}`,
-          `DESCRIPTION:${escIcs(details)}`,
-          "BEGIN:VALARM",
-          "TRIGGER:-P1D",
-          "ACTION:DISPLAY",
-          `DESCRIPTION:${escIcs(title)}`,
-          "END:VALARM",
-          "END:VEVENT",
-          "END:VCALENDAR"
-        ].join("\r\n");
-        try {
-          const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "steady-doctor-visit.ics";
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          showToast(t("visit_cal_added"));
-        } catch (e) {
-          copyTextSafe(`${title} (${fmtVisitShortDate(visitDraft.date)})${details ? "\n" + details : ""}`);
-          showToast(t("toast_copied"));
-        }
+        addCalendarEvent({
+          title: t("visit_cal_event_title"),
+          dateIso: visitDraft.date,
+          details: detailsParts.join("\n"),
+          filename: "steady-doctor-visit.ics"
+        });
       }
 
       function renderCare() {
@@ -6527,9 +6509,8 @@
           return;
         }
         if (e.target.closest("#refillIcsBtn")) {
-          downloadRefillIcs();
+          handleRefillAddToCalendar();
           $("#refillModal").hidden = true;
-          showToast(t("toast_prescription"));
           return;
         }
         if (e.target.closest("#refillCopyBtn")) {
