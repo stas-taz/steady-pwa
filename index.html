@@ -2080,10 +2080,43 @@
     .bmi-seg.is-d { background: #FF3B30; }
     .bmi-overlay { position: absolute; inset: 3px; pointer-events: none; }
     .bmi-marker { position: absolute; width: 20px; height: 20px; border-radius: 50%; top: 50%; margin-top: -10px; margin-left: -10px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.22); transition: left 360ms var(--ios-ease); z-index: 2; }
-    .bmi-target-dot { position: absolute; width: 10px; height: 10px; border-radius: 50%; top: 50%; margin-top: -5px; margin-left: -5px; background: #007AFF; transition: left 360ms var(--ios-ease); z-index: 1; }
-    .bmi-target-dot::before, .bmi-target-dot::after { content: ""; position: absolute; left: 50%; width: 1.5px; height: 5px; background: #007AFF; transform: translateX(-50%); }
-    .bmi-target-dot::before { top: -6px; }
-    .bmi-target-dot::after { bottom: -6px; }
+    .bmi-target-dot {
+      position: absolute; top: 2px; bottom: 2px; width: 3px; margin-left: -1.5px;
+      border-radius: 99px; background: rgba(15, 23, 42, 0.78);
+      box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.75);
+      transition: left 360ms var(--ios-ease); z-index: 1;
+    }
+    .bmi-card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; margin-bottom: 10px; min-width: 0;
+    }
+    .bmi-card-range {
+      font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .bmi-card-badges {
+      display: inline-flex; align-items: center; justify-content: flex-end;
+      gap: 6px; min-width: 0; flex-shrink: 1;
+    }
+    .bmi-goal-chip {
+      font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+      padding: 3px 9px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+      background: rgba(0, 122, 255, 0.10); color: var(--accent);
+    }
+    :root[data-theme="dark"] .bmi-goal-chip {
+      background: rgba(10, 132, 255, 0.18);
+    }
+    .bmi-cat-badge {
+      font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+    }
+    @media (max-width: 382px) {
+      .bmi-card-head { gap: 6px; }
+      .bmi-card-range { font-size: 14px; }
+      .bmi-card-badges { gap: 5px; }
+      .bmi-goal-chip { font-size: 11.5px; padding: 3px 7px; }
+      .bmi-cat-badge { font-size: 11.5px; padding: 3px 8px; }
+    }
     .bmi-ruler { display: flex; align-items: flex-start; justify-content: space-between; margin-top: 6px; }
     .bmi-tick-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .bmi-tick { display: block; width: 1px; height: 5px; background: #CBD5E1; margin: 0 auto 4px; }
@@ -3354,7 +3387,7 @@
         const diffValStr = hasW2
           ? ((diffKg > 0 ? "+" : "") + (state.usUnits ? (diffKg * 2.20462).toFixed(1) + " lbs" : diffKg.toFixed(1) + " " + wu()))
           : (hasW && !state.shareHideWeight ? fmtW(lastW) : t("my_progress"));
-        const targetDenom = hasW2 ? Math.max(0.1, Math.abs(firstW - state.targetWeightKg)) : 1;
+        const targetDenom = (hasW2 && state.targetWeightKg != null) ? Math.max(0.1, Math.abs(firstW - state.targetWeightKg)) : 1;
         const pct = hasW2
           ? Math.max(0, Math.min(100, Math.round(((firstW - lastW) / targetDenom) * 100)))
           : 0;
@@ -3848,7 +3881,7 @@
         const diffVal = hasW2
           ? ((diffKg > 0 ? "+" : "") + (state.usUnits ? (diffKg * 2.20462).toFixed(1) : diffKg.toFixed(1)))
           : "—";
-        const pct = hasW2
+        const pct = (hasW2 && state.targetWeightKg != null)
           ? Math.max(0, Math.min(100, Math.round(((firstW - lastW) / Math.max(0.1, firstW - state.targetWeightKg)) * 100)))
           : 0;
         const gArr = Array.isArray(state.glucoseMmol) ? state.glucoseMmol : [];
@@ -4218,7 +4251,7 @@
         else if (!Array.isArray(v)) delete state.shotsByDay[k];
       });
       const getDayShots = (d) => Array.isArray((state.shotsByDay || {})[d]) ? state.shotsByDay[d] : [];
-      if (!state.targetWeightKg || isNaN(state.targetWeightKg)) state.targetWeightKg = 85.0;
+      if (state.targetWeightKg != null && (!isFinite(Number(state.targetWeightKg)) || Number(state.targetWeightKg) <= 20)) state.targetWeightKg = null;
       if (!Array.isArray(state.weightsKg)) state.weightsKg = [];
       if (!Array.isArray(state.glucoseMmol)) state.glucoseMmol = [];
       if (!Array.isArray(state.glucoseContexts)) state.glucoseContexts = [];
@@ -5425,7 +5458,8 @@
         const diffColor = isNaN(diffW) ? "var(--muted)" : (diffW <= 0 ? "var(--green)" : "var(--orange)");
         const rangeLbl = state.chartRange === "4w" ? t("range_4w") : (state.chartRange === "3m" ? t("range_3m") : t("range_all"));
         const lastG = state.glucoseMmol[state.glucoseMmol.length - 1];
-        const toTargetKg = hasW ? (lastW - (state.targetWeightKg || 85)) : NaN;
+        const _hasTargetW = state.targetWeightKg != null && !isNaN(parseFloat(state.targetWeightKg)) && parseFloat(state.targetWeightKg) > 20;
+        const toTargetKg = (hasW && _hasTargetW) ? (lastW - parseFloat(state.targetWeightKg)) : NaN;
 
         // BMI (Trends Weight|BMI switch)
         const _wUnit = state.usUnits ? "lbs" : (state.lang === "ru" ? "кг" : "kg");
@@ -5435,7 +5469,7 @@
         const _bmiOf = (kg) => (_hasH && kg != null && !isNaN(kg)) ? kg / (_hM * _hM) : null;
         const _lastBmi = _bmiOf(lastW);
         const _firstBmi = _bmiOf(state.weightsKg[0]);
-        const _targetBmi = _bmiOf(state.targetWeightKg);
+        const _targetBmi = _hasTargetW ? _bmiOf(parseFloat(state.targetWeightKg)) : null;
         const _isDk = state.theme === "dark";
         const _bmiCat = (b) => b < 18.5 ? { l: "bmi_under", c: _isDk ? "#5AC8FA" : "#0369A1", bg: "rgba(90,200,250,.18)" } : b < 25 ? { l: "bmi_norm", c: _isDk ? "#30D158" : "#15803D", bg: "rgba(52,199,89,.16)" } : b < 30 ? { l: "bmi_over", c: _isDk ? "#FF9F0A" : "#B45309", bg: "rgba(255,149,0,.18)" } : { l: "bmi_high", c: _isDk ? "#FF453A" : "#B91C1C", bg: "rgba(255,59,48,.18)" };
         const _cat = _lastBmi != null ? _bmiCat(_lastBmi) : null;
@@ -5455,9 +5489,9 @@
           ? t("pace_plateau")
           : (paceAbs <= 1.0 ? t("pace_ok") : t("pace_fast"));
         const startWAll = hasW ? state.weightsKg[0] : null;
-        const totalToLose = hasW ? Math.max(0.1, startWAll - (state.targetWeightKg || 85)) : 1;
+        const totalToLose = (hasW && _hasTargetW) ? Math.max(0.1, startWAll - parseFloat(state.targetWeightKg)) : 1;
         const lostSoFar = hasW ? Math.max(0, startWAll - lastW) : 0;
-        const targetPct = hasW ? Math.min(100, Math.round((lostSoFar / totalToLose) * 100)) : 0;
+        const targetPct = (hasW && _hasTargetW) ? Math.min(100, Math.round((lostSoFar / totalToLose) * 100)) : 0;
 
         // Current dose effect
         const curDose = state.pointDoses[state.pointDoses.length - 1] || (state.drugs[state.drugIdx]?.dose || "");
@@ -5546,9 +5580,12 @@
 
               <div class="trends-pane trends-pane-bmi is-hidden">
                 ${_hasH ? `
-                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">
-                    <div style="font-size:15px;font-weight:800">${_firstBmi != null && _lastBmi != null && state.weightsKg.length >= 2 ? _firstBmi.toFixed(1) + " → " + _lastBmi.toFixed(1) : "BMI " + _bmiNum}</div>
-                    ${_cat ? `<span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:${_cat.bg};color:${_cat.c}">${t(_cat.l)}</span>` : ""}
+                  <div class="bmi-card-head">
+                    <div class="bmi-card-range">${_firstBmi != null && _lastBmi != null && state.weightsKg.length >= 2 ? _firstBmi.toFixed(1) + " → " + _lastBmi.toFixed(1) : "BMI " + _bmiNum}</div>
+                    <div class="bmi-card-badges">
+                      ${_targetBmi != null ? `<span class="bmi-goal-chip" id="bmiGoalChip">${t("goalLbl")} ${_targetBmi.toFixed(1)}</span>` : ""}
+                      ${_cat ? `<span class="bmi-cat-badge" style="background:${_cat.bg};color:${_cat.c}">${t(_cat.l)}</span>` : ""}
+                    </div>
                   </div>
                   <div class="bmi-groove">
                     <div class="bmi-track"><div class="bmi-seg is-a"></div><div class="bmi-seg is-b"></div><div class="bmi-seg is-c"></div><div class="bmi-seg is-d"></div></div>
@@ -5606,10 +5643,10 @@
           <div class="card">
             <div style="display:flex;justify-content:space-between;align-items:baseline">
               <span style="font-size:15px;font-weight:600">${t("goalLbl")} · ${fmtW(state.targetWeightKg)}</span>
-              <span style="font-size:15px;font-weight:700;color:var(--ink)">${targetPct}%</span>
+              <span style="font-size:15px;font-weight:700;color:var(--ink)">${_hasTargetW ? targetPct + "%" : "—"}</span>
             </div>
-            <div class="macro-bar" style="margin-top:8px"><div class="macro-fill" style="width:${targetPct}%;background:var(--green)"></div></div>
-            <div style="font-size:12px;color:var(--muted);margin-top:6px">${!hasW ? t("empty_chart") : tf("progress_done", fmtW(lostSoFar), (toTargetKg <= 0 ? t("goal_reached") : tf("to_goal", fmtW(toTargetKg)) + (weeklyPaceKg < -0.05 ? " · ~" + Math.ceil(toTargetKg / Math.abs(weeklyPaceKg)) + " " + t("r4w").replace(/^\d+\s*/, "") : "")))}</div>
+            <div class="macro-bar" style="margin-top:8px"><div class="macro-fill" style="width:${_hasTargetW ? targetPct : 0}%;background:var(--green)"></div></div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px">${!hasW ? t("empty_chart") : (!_hasTargetW ? chartLeadTxt : tf("progress_done", fmtW(lostSoFar), (toTargetKg <= 0 ? t("goal_reached") : tf("to_goal", fmtW(toTargetKg)) + (weeklyPaceKg < -0.05 ? " · ~" + Math.ceil(toTargetKg / Math.abs(weeklyPaceKg)) + " " + t("r4w").replace(/^\d+\s*/, "") : ""))))}</div>
             <div class="summary-split">
               <div class="summary-col">
                 <div class="summary-val">${hasW2 ? ((weeklyPaceKg > 0 ? "+" : "") + (state.usUnits ? (weeklyPaceKg * 2.20462).toFixed(1) + " lbs" : weeklyPaceKg.toFixed(1) + " " + wUnit) + t("pace_week")) : "—"}</div>
@@ -7361,7 +7398,7 @@
       };
       const LANG_LOCALES = { ru: "ru-RU", en: "en-GB", es: "es-ES", de: "de-DE", fr: "fr-FR", it: "it-IT", pt: "pt-PT", nl: "nl-NL", pl: "pl-PL", tr: "tr-TR" };
 
-      const APP_VERSION = "v60";
+      const APP_VERSION = "v61";
       let devProPreviewVisible = false;
       let versionTapTimes = [];
 
@@ -8815,8 +8852,9 @@
           state.chartRange = cr.dataset.crange; state.chartSelectedIdx = null; render(); return;
         }
         if (e.target.closest("#openTargetWeightBtn")) {
+          const _tw = state.targetWeightKg || 85;
           $("#twUnitLbl").textContent = state.usUnits ? "lbs" : (state.lang === "ru" ? "кг" : "kg");
-          $("#targetWeightInp").value = state.usUnits ? (state.targetWeightKg * 2.20462).toFixed(1) : state.targetWeightKg.toFixed(1);
+          $("#targetWeightInp").value = state.usUnits ? (_tw * 2.20462).toFixed(1) : _tw.toFixed(1);
           $("#targetWeightModal").hidden = false;
           return;
         }
@@ -9137,8 +9175,9 @@
           render(); return;
         }
         if (e.target.closest("#setTargetWeightBtn")) {
+          const _tw = state.targetWeightKg || 85;
           $("#twUnitLbl").textContent = state.usUnits ? "lbs" : (state.lang === "ru" ? "кг" : "kg");
-          $("#targetWeightInp").value = state.usUnits ? (state.targetWeightKg * 2.20462).toFixed(1) : state.targetWeightKg.toFixed(1);
+          $("#targetWeightInp").value = state.usUnits ? (_tw * 2.20462).toFixed(1) : _tw.toFixed(1);
           $("#targetWeightModal").hidden = false;
           return;
         }
