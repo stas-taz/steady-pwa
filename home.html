@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steady — Calm GLP-1 &amp; Type 2 Diabetes Companion</title>
+  <meta name="description" content="Private GLP-1 & Type 2 diabetes tracker — log injections, follow dose-colored weight trends, monitor glucose, and export a 1-page Doctor Visit PDF. 100% on-device, 10 languages, no account." />
+  <meta name="theme-color" content="#FFFFFF" />
+  <link rel="canonical" href="https://stas-taz.github.io/steady-pwa/home.html" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+
+  <!-- OpenGraph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Steady" />
+  <meta property="og:title" content="Steady — Calm tracking. Private by design." />
+  <meta property="og:description" content="GLP-1 & Type 2 diabetes companion in 10 languages. Injections, dose-colored weight chart, glucose, and 1-page Doctor Visit PDF — 100% on your phone." />
+  <meta property="og:url" content="https://stas-taz.github.io/steady-pwa/home.html" />
+  <meta property="og:image" content="https://stas-taz.github.io/steady-pwa/icons/icon-512.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Steady — Calm tracking. Private by design." />
+  <meta name="twitter:description" content="Private GLP-1 & Type 2 diabetes tracker. 100% on-device, 10 languages, 1-page Doctor Visit PDF." />
+  <meta name="twitter:image" content="https://stas-taz.github.io/steady-pwa/icons/icon-512.png" />
+
+  <style>
+    :root {
+      --bg: #FFFFFF;
+      --bg-soft: #F5F7FB;
+      --surface: #FFFFFF;
+      --surface-2: #F2F4F8;
+      --ink: #111827;
+      --ink-2: #374151;
+      --muted: #6B7280;
+      --line: rgba(15, 23, 42, 0.08);
+      --line-strong: rgba(15, 23, 42, 0.14);
+      --accent: #007AFF;
+      --accent-hover: #0066D6;
+      --accent-soft: rgba(0, 122, 255, 0.10);
+      --green: #30B566;
+      --green-soft: rgba(48, 181, 102, 0.12);
+      --amber: #FF9F0A;
+      --coral: #FF375F;
+      --purple: #AF52DE;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 14px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 8px 30px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.05);
+      --shadow-phone: 0 24px 60px rgba(15, 23, 42, 0.13), 0 4px 16px rgba(15, 23, 42, 0.06);
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --max-w: 1120px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x: clip;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; }
+    .tnum { font-variant-numeric: tabular-nums; }
+
+    .wrap {
+      width: 100%;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ---- Sticky Editorial Header ---- */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: saturate(180%) blur(18px);
+      -webkit-backdrop-filter: saturate(180%) blur(18px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      height: 64px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+    .brand-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: block;
+      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.22);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-2);
+    }
+    .nav-links a {
+      transition: color 0.15s ease;
+      white-space: nowrap;
+    }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .lang-seg {
+      display: inline-flex;
+      padding: 2px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+    .lang-seg button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .lang-seg button.is-active {
+      background: #FFFFFF;
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.10);
+    }
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 34px;
+      padding: 0 15px;
+      border-radius: 999px;
+      background: #111827;
+      color: #FFFFFF;
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background 0.15s ease, transform 0.12s ease;
+    }
+    .nav-cta:hover { background: #1F2937; }
+    .nav-cta:active { transform: scale(0.98); }
+
+    /* ---- Hero ---- */
+    .hero {
+      padding: 72px 0 84px;
+      background: linear-gradient(180deg, #FFFFFF 0%, #F5F7FB 100%);
+      border-bottom: 1px solid var(--line);
+    }
+    .hero-head {
+      max-width: 780px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(36px, 5.2vw, 56px);
+      font-weight: 700;
+      line-height: 1.07;
+      letter-spacing: -0.035em;
+      color: var(--ink);
+      text-wrap: balance;
+    }
+    .hero-sub {
+      margin: 20px auto 0;
+      max-width: 600px;
+      font-size: clamp(16.5px, 2vw, 19px);
+      line-height: 1.55;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+    .btn-primary, .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 48px;
+      padding: 0 24px;
+      border-radius: 999px;
+      font-size: 15.5px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #FFFFFF;
+      box-shadow: 0 6px 20px rgba(0, 122, 255, 0.24);
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 8px 24px rgba(0, 122, 255, 0.30);
+    }
+    .btn-secondary {
+      background: #FFFFFF;
+      color: var(--ink);
+      border: 1px solid var(--line-strong);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-secondary:hover {
+      background: #FAFAFC;
+      border-color: rgba(15, 23, 42, 0.24);
+    }
+    .btn-primary:active, .btn-secondary:active { transform: scale(0.985); }
+    .hero-note {
+      margin: 16px 0 0;
+      font-size: 13.5px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* ---- 3-Phone Fan Showcase ---- */
+    .phone-fan {
+      margin: 56px auto 0;
+      max-width: 1020px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 24px;
+    }
+    .phone {
+      width: 296px;
+      flex: 0 0 296px;
+      background: #F2F4F8;
+      border-radius: 40px;
+      padding: 10px;
+      border: 1px solid rgba(15, 23, 42, 0.11);
+      box-shadow: var(--shadow-phone);
+      position: relative;
+    }
+    .phone-side {
+      transform: translateY(10px) scale(0.95);
+      opacity: 0.98;
+    }
+    .phone-center {
+      width: 320px;
+      flex: 0 0 320px;
+      z-index: 2;
+      box-shadow: 0 30px 70px rgba(15, 23, 42, 0.16), 0 4px 18px rgba(15, 23, 42, 0.06);
+    }
+    .phone-screen {
+      background: #F4F6FA;
+      border-radius: 31px;
+      padding: 14px 13px 16px;
+      overflow: hidden;
+      min-height: 486px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .phone-center .phone-screen { min-height: 516px; }
+    .phone-notch {
+      width: 78px;
+      height: 18px;
+      border-radius: 999px;
+      background: #111827;
+      margin: 0 auto 4px;
+    }
+    .p-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .p-kicker {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .p-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+      line-height: 1.15;
+    }
+    .p-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .p-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .p-card {
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 11px 12px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+      border: 1px solid rgba(15, 23, 42, 0.04);
+    }
+    .p-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .p-card-lbl {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .p-badge-blue {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .p-badge-green {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #15803D;
+      background: rgba(52, 199, 89, 0.14);
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .p-badge-amber {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #B45309;
+      background: rgba(255, 159, 10, 0.16);
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    /* Center phone calendar + wave + rings */
+    .p-cal {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      background: #FFFFFF;
+      padding: 7px 6px;
+      border-radius: 16px;
+      border: 1px solid rgba(15, 23, 42, 0.04);
+    }
+    .p-cal-day {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 5px 2px;
+      border-radius: 12px;
+      font-size: 9.5px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .p-cal-day strong {
+      font-size: 12px;
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .p-cal-day.is-active {
+      background: linear-gradient(180deg, #1E90FF 0%, #007AFF 100%);
+      color: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.32);
+    }
+    .p-cal-day.is-active strong { color: #FFFFFF; }
+    .p-cal-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+    .p-cal-day.is-active .p-cal-dot { background: #FFFFFF; }
+    .p-rings {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      text-align: center;
+      margin-top: 6px;
+    }
+    .p-ring-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .p-ring-lbl {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .p-ring-val {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* Left phone dose legend & BMI bar */
+    .p-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .p-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .p-legend i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .p-bmi-bar-wrap {
+      position: relative;
+      padding: 3px;
+      border-radius: 999px;
+      background: #E8ECF2;
+      margin: 8px 0 4px;
+    }
+    .p-bmi-track {
+      display: grid;
+      grid-template-columns: 14% 26% 20% 40%;
+      height: 11px;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .p-bmi-tick {
+      position: absolute;
+      left: 31%;
+      top: 5px;
+      bottom: 5px;
+      width: 3px;
+      border-radius: 99px;
+      background: rgba(15, 23, 42, 0.78);
+      box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.8);
+      z-index: 1;
+    }
+    .p-bmi-marker {
+      position: absolute;
+      left: 48%;
+      top: 50%;
+      width: 17px;
+      height: 17px;
+      margin: -8.5px 0 0 -8.5px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.28);
+      z-index: 2;
+    }
+
+    /* Right phone pen supply + PDF card */
+    .p-pen-dots {
+      display: flex;
+      gap: 6px;
+      margin: 8px 0 6px;
+    }
+    .p-pen-dot {
+      flex: 1;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--accent);
+    }
+    .p-pen-dot.is-used { background: #E5E7EB; }
+    .p-bento {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin: 8px 0 10px;
+    }
+    .p-bento-tile {
+      background: #F5F7FB;
+      border-radius: 10px;
+      padding: 7px 8px;
+    }
+    .p-bento-lbl {
+      font-size: 9.5px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .p-bento-val {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-top: 1px;
+    }
+    .p-btn-blue {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      height: 34px;
+      border-radius: 11px;
+      background: var(--accent);
+      color: #FFFFFF;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+
+    /* ---- Editorial Sections ---- */
+    section { padding: 84px 0; }
+    .sec-soft {
+      background: var(--bg-soft);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .sec-head {
+      max-width: 640px;
+      margin: 0 auto 44px;
+      text-align: center;
+    }
+    .sec-kicker {
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    h2 {
+      margin: 0;
+      font-size: clamp(28px, 3.6vw, 40px);
+      font-weight: 700;
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      text-wrap: balance;
+    }
+    .sec-sub {
+      margin: 14px 0 0;
+      font-size: 17px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ---- Doctor PDF 2-Column Section ---- */
+    .pdf-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.02fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .pdf-copy h2 { text-align: left; }
+    .pdf-copy .sec-kicker { text-align: left; }
+    .pdf-copy .sec-sub { text-align: left; }
+    .check-list {
+      list-style: none;
+      padding: 0;
+      margin: 26px 0 0;
+      display: grid;
+      gap: 14px;
+    }
+    .check-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 15.5px;
+      color: var(--ink-2);
+    }
+    .check-ico {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* A4 Mini Sheet Mockup */
+    .a4-stage {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 24px;
+    }
+    .a4-sheet {
+      background: #FFFFFF;
+      border-radius: 8px;
+      border: 1px solid rgba(15, 23, 42, 0.10);
+      box-shadow: 0 14px 36px rgba(15, 23, 42, 0.09);
+      padding: 18px 18px 16px;
+      color: #111827;
+      font-size: 11px;
+    }
+    .a4-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid #111827;
+      margin-bottom: 12px;
+    }
+    .a4-head-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .a4-logo {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+    }
+    .a4-title {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+    .a4-sub {
+      font-size: 10px;
+      color: #4B5563;
+      font-weight: 600;
+    }
+    .a4-meta {
+      text-align: right;
+      font-size: 9.5px;
+      color: #374151;
+      line-height: 1.45;
+      white-space: nowrap;
+    }
+    .a4-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .a4-kpi {
+      border: 1px solid #1F2937;
+      border-radius: 6px;
+      padding: 7px 8px;
+    }
+    .a4-kpi-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #4B5563;
+    }
+    .a4-kpi-val {
+      font-size: 11px;
+      font-weight: 700;
+      margin: 3px 0 5px;
+    }
+    .a4-bar {
+      height: 7px;
+      border: 1px solid #111827;
+      border-radius: 3px;
+      overflow: hidden;
+      background: #FFFFFF;
+    }
+    .a4-bar-b {
+      height: 100%;
+      width: 64%;
+      background: repeating-linear-gradient(-45deg, #005FCC, #005FCC 3px, #3B82F6 3px, #3B82F6 5px);
+      border-right: 1px solid #111827;
+    }
+    .a4-bar-g {
+      height: 100%;
+      width: 88%;
+      background: repeating-linear-gradient(45deg, #15803D, #15803D 3px, #4ADE80 3px, #4ADE80 5px);
+      border-right: 1px solid #111827;
+    }
+    .a4-dots {
+      display: flex;
+      justify-content: space-between;
+      gap: 3px;
+      margin-top: 3px;
+    }
+    .a4-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1px solid #111827;
+      background: #005FCC;
+    }
+    .a4-dots span.is-off { background: #FFFFFF; }
+    .a4-sec {
+      font-size: 10px;
+      font-weight: 700;
+      border-bottom: 1px solid #111827;
+      padding-bottom: 3px;
+      margin: 10px 0 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .a4-tbl-box {
+      border: 1px solid #1F2937;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .a4-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+    .a4-tbl th, .a4-tbl td {
+      padding: 5px 7px;
+      text-align: left;
+      border-bottom: 1px solid #E5E7EB;
+    }
+    .a4-tbl th {
+      background: #F3F4F6;
+      border-bottom: 1px solid #1F2937;
+      font-size: 9px;
+      font-weight: 700;
+    }
+    .a4-tbl tr:last-child td { border-bottom: none; }
+    .a4-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 1px solid #111827;
+      font-size: 8.5px;
+      font-weight: 700;
+    }
+    .a4-num.is-last {
+      background: #005FCC;
+      color: #FFFFFF;
+    }
+
+    /* ---- Honest Comparison Table ---- */
+    .cmp-card {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+    .cmp-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .cmp-table th, .cmp-table td {
+      padding: 18px 22px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+    .cmp-table tr:last-child td { border-bottom: none; }
+    .cmp-table thead th {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: var(--muted);
+      background: #FAFBFD;
+    }
+    .cmp-table thead th.is-steady {
+      color: var(--accent);
+      background: rgba(0, 122, 255, 0.05);
+    }
+    .cmp-table tbody td.is-label {
+      font-weight: 600;
+      color: var(--ink);
+      width: 28%;
+    }
+    .cmp-table tbody td.is-steady {
+      font-weight: 600;
+      color: var(--ink);
+      background: rgba(0, 122, 255, 0.025);
+      width: 38%;
+    }
+    .cmp-table tbody td.is-other {
+      color: var(--muted);
+      width: 34%;
+    }
+    .cmp-ok {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .cmp-ok svg {
+      flex-shrink: 0;
+      margin-top: 3px;
+      color: var(--green);
+    }
+
+    /* ---- Pricing ---- */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+      align-items: stretch;
+    }
+    .price-card {
+      background: #FFFFFF;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .price-card.is-featured {
+      border: 2px solid var(--accent);
+      box-shadow: 0 16px 40px rgba(0, 122, 255, 0.12);
+    }
+    .price-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .price-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .price-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .price-amount {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+    .price-stars {
+      margin-top: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .price-desc {
+      margin: 14px 0 22px;
+      font-size: 14.5px;
+      color: var(--ink-2);
+    }
+    .price-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 42px;
+      border-radius: 999px;
+      font-size: 14.5px;
+      font-weight: 600;
+      background: var(--surface-2);
+      color: var(--ink);
+      transition: background 0.15s ease;
+    }
+    .price-btn:hover { background: #E7EBF2; }
+    .price-card.is-featured .price-btn {
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+    .price-card.is-featured .price-btn:hover { background: var(--accent-hover); }
+    .pricing-foot {
+      margin: 26px auto 0;
+      max-width: 640px;
+      text-align: center;
+      font-size: 14.5px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ---- FAQ 2x2 ---- */
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .faq-card {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .faq-card h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--ink);
+    }
+    .faq-card p {
+      margin: 0;
+      font-size: 14.5px;
+      color: var(--ink-2);
+      line-height: 1.6;
+    }
+
+    /* ---- Minimalist Footer ---- */
+    footer {
+      padding: 34px 0 42px;
+      border-top: 1px solid var(--line);
+      background: #FFFFFF;
+    }
+    .foot-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+    .foot-links {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .foot-links a:hover { color: var(--ink); }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 980px) {
+      .phone { width: 260px; flex: 0 0 260px; }
+      .phone-center { width: 290px; flex: 0 0 290px; }
+      .pdf-grid { grid-template-columns: 1fr; gap: 32px; }
+      .pdf-copy h2, .pdf-copy .sec-kicker, .pdf-copy .sec-sub { text-align: center; }
+    }
+
+    @media (max-width: 860px) {
+      .nav-links { display: none; }
+      .phone-side { display: none; }
+      .phone-fan { margin-top: 40px; }
+      .phone-center {
+        width: 100%;
+        max-width: 324px;
+        flex: 0 1 324px;
+      }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .faq-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .wrap { padding: 0 18px; }
+      .nav-inner { height: 58px; gap: 8px; }
+      .brand { font-size: 16.5px; gap: 8px; }
+      .brand-icon { width: 26px; height: 26px; border-radius: 7px; }
+      .nav-cta { height: 32px; padding: 0 12px; font-size: 12.5px; }
+      .lang-seg button { padding: 5px 8px; font-size: 11.5px; }
+      .hero { padding: 48px 0 60px; }
+      .kicker { font-size: 11.5px; padding: 5px 11px; }
+      .hero-actions { flex-direction: column; width: 100%; }
+      .btn-primary, .btn-secondary { width: 100%; max-width: 320px; }
+      section { padding: 58px 0; }
+      .a4-stage { padding: 14px; border-radius: 18px; }
+      .a4-sheet { padding: 13px 12px; }
+      .a4-kpis { grid-template-columns: 1fr; }
+      .cmp-table, .cmp-table thead, .cmp-table tbody, .cmp-table tr, .cmp-table th, .cmp-table td {
+        display: block;
+        width: 100% !important;
+      }
+      .cmp-table thead { display: none; }
+      .cmp-table tr {
+        padding: 16px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .cmp-table tr:last-child { border-bottom: none; }
+      .cmp-table tbody td {
+        padding: 4px 0;
+        border-bottom: none;
+        background: transparent !important;
+      }
+      .cmp-table tbody td.is-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .cmp-table tbody td.is-steady {
+        font-size: 15px;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+      .cmp-table tbody td.is-other {
+        font-size: 13.5px;
+        color: var(--muted);
+      }
+      .foot-inner { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sticky Editorial Header -->
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="#top" class="brand" aria-label="Steady">
+        <img src="icons/apple-touch-icon.png" alt="Steady" class="brand-icon" width="30" height="30" />
+        <span>Steady</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#pdf" data-i18n="nav_pdf">Doctor PDF</a>
+        <a href="#compare" data-i18n="nav_local">Why local</a>
+        <a href="#pricing" data-i18n="nav_pricing">Pricing</a>
+        <a href="#faq" data-i18n="nav_faq">FAQ</a>
+      </nav>
+
+      <div class="nav-right">
+        <div class="lang-seg" role="group" aria-label="Language">
+          <button type="button" id="langEnBtn" data-set-lang="en" class="is-active">EN</button>
+          <button type="button" id="langRuBtn" data-set-lang="ru">RU</button>
+        </div>
+        <a href="./" class="nav-cta" data-i18n="nav_open">Open Steady</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-head">
+          <div class="kicker" data-i18n="hero_kicker">GLP-1 &amp; Type 2 Diabetes Companion · 10 Languages</div>
+          <h1 data-i18n="hero_h1">Calm tracking. Private by design.</h1>
+          <p class="hero-sub" data-i18n="hero_sub">Log weekly injections, follow dose-colored weight trends, monitor fasting glucose, and export a 1-page Doctor Visit PDF — strictly on your phone, with no account and no cloud.</p>
+          <div class="hero-actions">
+            <a href="./" class="btn-primary" data-i18n="hero_cta_web">Open Web App</a>
+            <a href="https://t.me/steady_glp_bot" target="_blank" rel="noopener" class="btn-secondary">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+              <span data-i18n="hero_cta_tg">Open in Telegram</span>
+            </a>
+          </div>
+          <p class="hero-note" data-i18n="hero_note">No sign-up · Works in Safari &amp; Chrome · 30 days full Pro free</p>
+        </div>
+
+        <!-- 3-Phone Fan Showcase -->
+        <div class="phone-fan" aria-label="Steady mobile screens preview">
+          <!-- Left Phone: Trends (Dose-colored Weight Chart + BMI with inner tick & Goal 22.0 chip) -->
+          <div class="phone phone-side" aria-hidden="true">
+            <div class="phone-screen">
+              <div class="phone-notch"></div>
+              <div class="p-head">
+                <div>
+                  <div class="p-kicker" data-i18n="m_trends_kicker">TRENDS</div>
+                  <div class="p-title tnum">78.9 <span style="font-size:13px;font-weight:600;color:var(--muted)" data-i18n="m_unit_kg">kg</span></div>
+                </div>
+                <span class="p-badge-green tnum">−9.5 <span data-i18n="m_unit_kg">kg</span></span>
+              </div>
+
+              <div class="p-card">
+                <div class="p-card-top">
+                  <span class="p-card-lbl" data-i18n="m_weight_by_dose">Weight by dose</span>
+                  <span style="font-size:10.5px;color:var(--accent);font-weight:600" data-i18n="m_all">All</span>
+                </div>
+                <div class="p-legend tnum">
+                  <span><i style="background:#007AFF"></i><span data-i18n="m_d1">0.25 mg</span></span>
+                  <span><i style="background:#30B566"></i><span data-i18n="m_d2">0.5 mg</span></span>
+                  <span><i style="background:#FF9F0A"></i><span data-i18n="m_d3">1.0 mg</span></span>
+                </div>
+                <svg viewBox="0 0 240 104" width="100%" style="display:block">
+                  <defs>
+                    <linearGradient id="hGrad1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#007AFF" stop-opacity="0.18"/><stop offset="100%" stop-color="#007AFF" stop-opacity="0.01"/></linearGradient>
+                    <linearGradient id="hGrad2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#30B566" stop-opacity="0.18"/><stop offset="100%" stop-color="#30B566" stop-opacity="0.01"/></linearGradient>
+                    <linearGradient id="hGrad3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF9F0A" stop-opacity="0.18"/><stop offset="100%" stop-color="#FF9F0A" stop-opacity="0.01"/></linearGradient>
+                  </defs>
+                  <line x1="8" y1="20" x2="232" y2="20" stroke="#E5E7EB" stroke-width="0.8"/>
+                  <line x1="8" y1="54" x2="232" y2="54" stroke="#E5E7EB" stroke-width="0.8"/>
+                  <line x1="8" y1="88" x2="232" y2="88" stroke="#30B566" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>
+                  <!-- Vertical subtle dose-step guides -->
+                  <line x1="88" y1="12" x2="88" y2="90" stroke="#30B566" stroke-width="1" stroke-dasharray="2.5 3" opacity="0.45"/>
+                  <line x1="164" y1="12" x2="164" y2="90" stroke="#FF9F0A" stroke-width="1" stroke-dasharray="2.5 3" opacity="0.45"/>
+                  <!-- Segment areas -->
+                  <path d="M12,20 C40,26 60,34 88,43 L88,92 L12,92 Z" fill="url(#hGrad1)"/>
+                  <path d="M88,43 C116,52 138,57 164,66 L164,92 L88,92 Z" fill="url(#hGrad2)"/>
+                  <path d="M164,66 C188,73 208,77 228,82 L228,92 L164,92 Z" fill="url(#hGrad3)"/>
+                  <!-- Colored smooth segments -->
+                  <path d="M12,20 C40,26 60,34 88,43" fill="none" stroke="#007AFF" stroke-width="2.6" stroke-linecap="round"/>
+                  <path d="M88,43 C116,52 138,57 164,66" fill="none" stroke="#30B566" stroke-width="2.6" stroke-linecap="round"/>
+                  <path d="M164,66 C188,73 208,77 228,82" fill="none" stroke="#FF9F0A" stroke-width="2.6" stroke-linecap="round"/>
+                  <!-- Normal points r=3 & dose-change points r=4.5 -->
+                  <circle cx="12" cy="20" r="3" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.4"/>
+                  <circle cx="50" cy="31" r="3" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.4"/>
+                  <circle cx="88" cy="43" r="7" fill="#30B566" opacity="0.16"/>
+                  <circle cx="88" cy="43" r="4.5" fill="#30B566" stroke="#FFFFFF" stroke-width="2"/>
+                  <circle cx="126" cy="54" r="3" fill="#30B566" stroke="#FFFFFF" stroke-width="1.4"/>
+                  <circle cx="164" cy="66" r="7" fill="#FF9F0A" opacity="0.16"/>
+                  <circle cx="164" cy="66" r="4.5" fill="#FF9F0A" stroke="#FFFFFF" stroke-width="2"/>
+                  <circle cx="200" cy="75" r="3" fill="#FF9F0A" stroke="#FFFFFF" stroke-width="1.4"/>
+                  <circle cx="228" cy="82" r="3" fill="#FF9F0A" stroke="#FFFFFF" stroke-width="1.4"/>
+                </svg>
+              </div>
+
+              <!-- BMI Card with inner vertical target tick + Goal 22.0 chip -->
+              <div class="p-card">
+                <div class="p-card-top" style="margin-bottom:4px;gap:4px">
+                  <span class="p-card-lbl tnum" style="font-size:11px;white-space:nowrap">29.1 → 26.2</span>
+                  <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+                    <span class="p-badge-blue tnum" style="font-size:9.5px;padding:2px 6px" data-i18n="m_goal_bmi">Goal 22.0</span>
+                    <span class="p-badge-amber" style="font-size:9.5px;padding:2px 6px" data-i18n="m_bmi_over">Overweight</span>
+                  </div>
+                </div>
+                <div class="p-bmi-bar-wrap">
+                  <div class="p-bmi-track">
+                    <div style="background:#5AC8FA"></div>
+                    <div style="background:#34C759"></div>
+                    <div style="background:#FF9F0A"></div>
+                    <div style="background:#FF3B30"></div>
+                  </div>
+                  <div class="p-bmi-tick"></div>
+                  <div class="p-bmi-marker"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-weight:600" class="tnum">
+                  <span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
+                </div>
+              </div>
+
+              <div class="p-card" style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:10px;color:var(--muted);font-weight:600" data-i18n="m_glucose_lbl">Fasting glucose</div>
+                  <div style="font-size:15px;font-weight:800;color:#AF52DE" class="tnum">5.3 <span style="font-size:10px;font-weight:600;color:var(--muted)" data-i18n="m_unit_mmol">mmol/L</span></div>
+                </div>
+                <span class="p-badge-green" data-i18n="m_in_range">In range</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Center Phone: Today (Ozempic 1.0 mg, 7-day calendar with blue lens, ~76% curve, Your Day rings) -->
+          <div class="phone phone-center">
+            <div class="phone-screen">
+              <div class="phone-notch"></div>
+              <div class="p-head">
+                <div>
+                  <div class="p-kicker" data-i18n="m_today_date">FRI, NOV 27</div>
+                  <div class="p-title" data-i18n="m_today_title">Today</div>
+                </div>
+                <span class="p-pill"><span class="p-dot"></span><span data-i18n="m_ozempic">Ozempic · 1.0 mg</span></span>
+              </div>
+
+              <!-- 7-day Calendar with Blue Lens -->
+              <div class="p-cal tnum">
+                <div class="p-cal-day"><span data-i18n="d_mon">Mon</span><strong>23</strong><span class="p-cal-dot"></span></div>
+                <div class="p-cal-day"><span data-i18n="d_tue">Tue</span><strong>24</strong></div>
+                <div class="p-cal-day is-active"><span data-i18n="d_wed">Wed</span><strong>25</strong><span class="p-cal-dot"></span></div>
+                <div class="p-cal-day"><span data-i18n="d_thu">Thu</span><strong>26</strong></div>
+                <div class="p-cal-day"><span data-i18n="d_fri">Fri</span><strong>27</strong></div>
+                <div class="p-cal-day"><span data-i18n="d_sat">Sat</span><strong>28</strong></div>
+                <div class="p-cal-day"><span data-i18n="d_sun">Sun</span><strong>29</strong></div>
+              </div>
+
+              <!-- Medication Level Wave (~76%) -->
+              <div class="p-card">
+                <div class="p-card-top">
+                  <div>
+                    <div style="font-size:10.5px;color:var(--muted);font-weight:600" data-i18n="m_level_lbl">Estimated level</div>
+                    <div style="font-size:23px;font-weight:800;letter-spacing:-0.03em;line-height:1.1" class="tnum">~76%</div>
+                  </div>
+                  <span class="p-badge-blue" data-i18n="m_phase_peak">Peak effect</span>
+                </div>
+                <svg viewBox="0 0 260 66" width="100%" style="display:block;margin-top:2px">
+                  <defs>
+                    <linearGradient id="waveFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#007AFF" stop-opacity="0.22"/>
+                      <stop offset="100%" stop-color="#007AFF" stop-opacity="0.01"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M6,50 C34,26 62,12 96,14 C140,16 184,36 254,48 L254,62 L6,62 Z" fill="url(#waveFill)"/>
+                  <path d="M6,50 C34,26 62,12 96,14 C140,16 184,36 254,48" fill="none" stroke="#007AFF" stroke-width="2.8" stroke-linecap="round"/>
+                  <line x1="96" y1="14" x2="96" y2="62" stroke="#007AFF" stroke-width="1" stroke-dasharray="2.5 2.5" opacity="0.45"/>
+                  <circle cx="96" cy="14" r="7.5" fill="#007AFF" opacity="0.18"/>
+                  <circle cx="96" cy="14" r="4.2" fill="#007AFF" stroke="#FFFFFF" stroke-width="2"/>
+                </svg>
+              </div>
+
+              <!-- Your Day Rings (Protein / Fiber / Water) -->
+              <div class="p-card">
+                <div class="p-card-top" style="margin-bottom:2px">
+                  <span class="p-card-lbl" data-i18n="m_your_day">Your day</span>
+                  <span style="font-size:10.5px;color:var(--muted);font-weight:600" data-i18n="m_daily_goals">Daily goals</span>
+                </div>
+                <div class="p-rings tnum">
+                  <div class="p-ring-item">
+                    <svg width="50" height="50" viewBox="0 0 44 44">
+                      <circle cx="22" cy="22" r="17" fill="none" stroke="#ECEFF5" stroke-width="4.5"/>
+                      <circle cx="22" cy="22" r="17" fill="none" stroke="#007AFF" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="18" transform="rotate(-90 22 22)"/>
+                      <text x="22" y="25" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111827">84%</text>
+                    </svg>
+                    <span class="p-ring-lbl" data-i18n="m_protein">Protein</span>
+                    <span class="p-ring-val" data-i18n="m_protein_val">92 / 110 g</span>
+                  </div>
+                  <div class="p-ring-item">
+                    <svg width="50" height="50" viewBox="0 0 44 44">
+                      <circle cx="22" cy="22" r="17" fill="none" stroke="#ECEFF5" stroke-width="4.5"/>
+                      <circle cx="22" cy="22" r="17" fill="none" stroke="#30B566" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="15" transform="rotate(-90 22 22)"/>
+                      <text x="22" y="25" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111827">86%</text>
+                    </svg>
+                    <span class="p-ring-lbl" data-i18n="m_fiber">Fiber</span>
+                    <span class="p-ring-val" data-i18n="m_fiber_val">24 / 28 g</span>
+                  </div>
+                  <div class="p-ring-item">
+                    <svg width="50" height="50" viewBox="0 0 44 44">
+                      <circle cx="22" cy="22" r="17" fill="none" stroke="#ECEFF5" stroke-width="4.5"/>
+                      <circle cx="22" cy="22" r="17" fill="none" stroke="#32ADE6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="19" transform="rotate(-90 22 22)"/>
+                      <text x="22" y="25" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111827">82%</text>
+                    </svg>
+                    <span class="p-ring-lbl" data-i18n="m_water">Water</span>
+                    <span class="p-ring-val" data-i18n="m_water_val">1.8 / 2.2 L</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Phone: Doctor Visit (Pen Supply + 1-Page PDF Report) -->
+          <div class="phone phone-side" aria-hidden="true">
+            <div class="phone-screen">
+              <div class="phone-notch"></div>
+              <div class="p-head">
+                <div>
+                  <div class="p-kicker" data-i18n="m_plan_kicker">COURSE</div>
+                  <div class="p-title" data-i18n="m_visit_title">Doctor Visit</div>
+                </div>
+                <span class="p-badge-blue">A4 · PDF</span>
+              </div>
+
+              <!-- Pen Supply -->
+              <div class="p-card">
+                <div class="p-card-top" style="margin-bottom:2px">
+                  <span class="p-card-lbl" data-i18n="m_pen_supply">Pen supply</span>
+                  <span style="font-size:11px;font-weight:700;color:var(--accent)" data-i18n="m_doses_left">3 of 4 doses</span>
+                </div>
+                <div class="p-pen-dots">
+                  <span class="p-pen-dot"></span>
+                  <span class="p-pen-dot"></span>
+                  <span class="p-pen-dot"></span>
+                  <span class="p-pen-dot is-used"></span>
+                </div>
+                <div style="font-size:10.5px;color:var(--muted)" data-i18n="m_refill_hint">Refill reminder ready for calendar</div>
+              </div>
+
+              <!-- 1-Page PDF Report Card -->
+              <div class="p-card" style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
+                <div>
+                  <div class="p-card-top">
+                    <span class="p-card-lbl" data-i18n="m_pdf_card">1-Page PDF Report</span>
+                    <span style="font-size:10px;font-weight:600;color:var(--muted)" data-i18n="m_10_langs">10 langs</span>
+                  </div>
+                  <div class="p-bento tnum">
+                    <div class="p-bento-tile">
+                      <div class="p-bento-lbl" data-i18n="m_w_change">Weight</div>
+                      <div class="p-bento-val" style="color:var(--green)">−9.5 <span data-i18n="m_unit_kg">kg</span></div>
+                    </div>
+                    <div class="p-bento-tile">
+                      <div class="p-bento-lbl" data-i18n="m_adh">Adherence</div>
+                      <div class="p-bento-val">94%</div>
+                    </div>
+                    <div class="p-bento-tile">
+                      <div class="p-bento-lbl" data-i18n="m_glucose_short">Glucose TIR</div>
+                      <div class="p-bento-val" style="color:#AF52DE">88%</div>
+                    </div>
+                    <div class="p-bento-tile">
+                      <div class="p-bento-lbl" data-i18n="m_next_visit">Next visit</div>
+                      <div class="p-bento-val" data-i18n="m_visit_date_short">Dec 10</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="p-btn-blue">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                  <span data-i18n="m_share_pdf">Share / Print PDF</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Doctor Visit PDF Section -->
+    <section id="pdf">
+      <div class="wrap pdf-grid">
+        <div class="pdf-copy">
+          <div class="sec-kicker" data-i18n="pdf_kicker">DOCTOR VISIT PDF</div>
+          <h2 data-i18n="pdf_h2">One clear sheet your doctor can read in 30 seconds.</h2>
+          <p class="sec-sub" data-i18n="pdf_sub">Instead of scrolling through phone screenshots during an appointment, hand over a structured single-page A4 or US Letter clinical summary.</p>
+          <ul class="check-list">
+            <li>
+              <span class="check-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <span data-i18n="pdf_b1">Complete overview on 1 page: dose-colored weight curve, glucose Time-in-Range, 8-week adherence, symptoms, and injection site map.</span>
+            </li>
+            <li>
+              <span class="check-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <span data-i18n="pdf_b2">10 report languages — generate the PDF in your doctor's language independently from your interface language.</span>
+            </li>
+            <li>
+              <span class="check-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <span data-i18n="pdf_b3">Built for clinic printers: high-contrast B/W preview mode with hatched bars that stay legible even on low toner.</span>
+            </li>
+            <li>
+              <span class="check-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <span data-i18n="pdf_b4">Native 1-tap Share Sheet on iPhone (AirPrint, Apple Mail, AirDrop, Files) and instant PDF download on desktop.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Mini A4 Sheet Preview -->
+        <div class="a4-stage">
+          <div class="a4-sheet">
+            <div class="a4-head">
+              <div class="a4-head-left">
+                <img src="icons/apple-touch-icon.png" alt="" class="a4-logo" width="26" height="26" />
+                <div>
+                  <div class="a4-title" data-i18n="a4_title">Steady · Doctor Visit Summary</div>
+                  <div class="a4-sub" data-i18n="a4_sub">Ozempic 1.0 mg · A4 · 1 Page</div>
+                </div>
+              </div>
+              <div class="a4-meta tnum">
+                <div data-i18n="a4_patient">Patient: ___________</div>
+                <div data-i18n="a4_date">Visit: 10.12.2026</div>
+              </div>
+            </div>
+
+            <div class="a4-kpis tnum">
+              <div class="a4-kpi">
+                <div class="a4-kpi-top"><span data-i18n="a4_k1">Progress</span><span style="color:#005FCC">−9.5</span></div>
+                <div class="a4-kpi-val" data-i18n="a4_k1_v">88.4 → 78.9 kg</div>
+                <div class="a4-bar"><div class="a4-bar-b"></div></div>
+              </div>
+              <div class="a4-kpi">
+                <div class="a4-kpi-top"><span data-i18n="a4_k2">Glucose</span><span style="color:#15803D">88%</span></div>
+                <div class="a4-kpi-val" data-i18n="a4_k2_v">6.4 → 5.3 mmol/L</div>
+                <div class="a4-bar"><div class="a4-bar-g"></div></div>
+              </div>
+              <div class="a4-kpi">
+                <div class="a4-kpi-top"><span data-i18n="a4_k3">Adherence</span><span style="color:#005FCC">88%</span></div>
+                <div class="a4-kpi-val" data-i18n="a4_k3_v">7/8 on time</div>
+                <div class="a4-dots">
+                  <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span class="is-off"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="a4-sec">
+              <span data-i18n="a4_shots_h">Recent injections &amp; rotation</span>
+              <span>①–④</span>
+            </div>
+            <div class="a4-tbl-box">
+              <table class="a4-tbl tnum">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th data-i18n="a4_th_date">Date</th>
+                    <th data-i18n="a4_th_dose">Dose</th>
+                    <th data-i18n="a4_th_zone">Site</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="a4-num is-last">1</span></td>
+                    <td><strong data-i18n="a4_r1_d">Nov 20</strong></td>
+                    <td data-i18n="a4_r1_ds">1.0 mg</td>
+                    <td data-i18n="a4_r1_z">Left abdomen</td>
+                  </tr>
+                  <tr>
+                    <td><span class="a4-num">2</span></td>
+                    <td data-i18n="a4_r2_d">Nov 13</td>
+                    <td data-i18n="a4_r2_ds">1.0 mg</td>
+                    <td data-i18n="a4_r2_z">Right abdomen</td>
+                  </tr>
+                  <tr>
+                    <td><span class="a4-num">3</span></td>
+                    <td data-i18n="a4_r3_d">Nov 6</td>
+                    <td data-i18n="a4_r3_ds">0.5 mg</td>
+                    <td data-i18n="a4_r3_z">Left thigh</td>
+                  </tr>
+                  <tr>
+                    <td><span class="a4-num">4</span></td>
+                    <td data-i18n="a4_r4_d">Oct 30</td>
+                    <td data-i18n="a4_r4_ds">0.5 mg</td>
+                    <td data-i18n="a4_r4_z">Right thigh</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Honest Comparison -->
+    <section id="compare" class="sec-soft">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="sec-kicker" data-i18n="cmp_kicker">WHY LOCAL</div>
+          <h2 data-i18n="cmp_h2">An honest look at how Steady compares.</h2>
+          <p class="sec-sub" data-i18n="cmp_sub">No dark-pattern paywalls, no mandatory accounts, and no health data uploaded to third-party clouds.</p>
+        </div>
+
+        <div class="cmp-card">
+          <table class="cmp-table">
+            <thead>
+              <tr>
+                <th data-i18n="cmp_th_feat">Feature</th>
+                <th class="is-steady">Steady</th>
+                <th data-i18n="cmp_th_other">Typical GLP-1 apps</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="is-label" data-i18n="cmp_r1_l">Account &amp; cloud</td>
+                <td class="is-steady">
+                  <span class="cmp-ok">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span data-i18n="cmp_r1_s">No sign-up — 100% local on your device with JSON backup</span>
+                  </span>
+                </td>
+                <td class="is-other" data-i18n="cmp_r1_o">Required account &amp; cloud health servers</td>
+              </tr>
+              <tr>
+                <td class="is-label" data-i18n="cmp_r2_l">Type 2 diabetes glucose</td>
+                <td class="is-steady">
+                  <span class="cmp-ok">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span data-i18n="cmp_r2_s">Built-in glucose log (mmol/L &amp; mg/dL) + Time-in-Range</span>
+                  </span>
+                </td>
+                <td class="is-other" data-i18n="cmp_r2_o">Weight-only or separate paid app</td>
+              </tr>
+              <tr>
+                <td class="is-label" data-i18n="cmp_r3_l">Languages (UI + PDF)</td>
+                <td class="is-steady">
+                  <span class="cmp-ok">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span data-i18n="cmp_r3_s">10 full languages for UI and independent Doctor PDF</span>
+                  </span>
+                </td>
+                <td class="is-other" data-i18n="cmp_r3_o">Usually English-only</td>
+              </tr>
+              <tr>
+                <td class="is-label" data-i18n="cmp_r4_l">Honest pricing</td>
+                <td class="is-steady tnum">
+                  <span class="cmp-ok">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span data-i18n="cmp_r4_s">$1.99/mo · $11.99/yr · $19.99 Lifetime</span>
+                  </span>
+                </td>
+                <td class="is-other tnum" data-i18n="cmp_r4_o">$7–$13/mo recurring subscription</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Simple Pricing -->
+    <section id="pricing">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="sec-kicker" data-i18n="pr_kicker">SIMPLE PRICING</div>
+          <h2 data-i18n="pr_h2">Fair plans. No surprises.</h2>
+          <p class="sec-sub" data-i18n="pr_sub">Try everything free for 30 days. Unlock Pro via Telegram Stars or Crypto Pay whenever you are ready.</p>
+        </div>
+
+        <div class="pricing-grid tnum">
+          <div class="price-card">
+            <div>
+              <div class="price-top">
+                <span class="price-name" data-i18n="pr_m_name">Monthly</span>
+              </div>
+              <div class="price-amount">$1.99</div>
+              <div class="price-stars" data-i18n="pr_m_stars">or 100 ⭐ · per month</div>
+              <p class="price-desc" data-i18n="pr_m_desc">Full access to Doctor PDF reports, full history trends, and all Pro features.</p>
+            </div>
+            <a href="./" class="price-btn" data-i18n="pr_cta">Start 30 days free</a>
+          </div>
+
+          <div class="price-card is-featured">
+            <div>
+              <div class="price-top">
+                <span class="price-name" data-i18n="pr_y_name">Yearly</span>
+                <span class="price-badge">−50%</span>
+              </div>
+              <div class="price-amount">$11.99</div>
+              <div class="price-stars" data-i18n="pr_y_stars">or 600 ⭐ · per year</div>
+              <p class="price-desc" data-i18n="pr_y_desc">Best value for an ongoing GLP-1 or T2D course — less than $1/month.</p>
+            </div>
+            <a href="./" class="price-btn" data-i18n="pr_cta">Start 30 days free</a>
+          </div>
+
+          <div class="price-card">
+            <div>
+              <div class="price-top">
+                <span class="price-name" data-i18n="pr_l_name">Lifetime</span>
+              </div>
+              <div class="price-amount">$19.99</div>
+              <div class="price-stars" data-i18n="pr_l_stars">or 1,000 ⭐ · one-time</div>
+              <p class="price-desc" data-i18n="pr_l_desc">Pay once, keep Steady Pro forever with no recurring charges.</p>
+            </div>
+            <a href="./" class="price-btn" data-i18n="pr_cta">Start 30 days free</a>
+          </div>
+        </div>
+
+        <p class="pricing-foot" data-i18n="pr_foot">Every new user gets 30 days of full Pro free — no credit card and no auto-billing. Core daily tracking remains free forever.</p>
+      </div>
+    </section>
+
+    <!-- FAQ 2x2 -->
+    <section id="faq" class="sec-soft">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="sec-kicker">FAQ</div>
+          <h2 data-i18n="faq_h2">Common questions</h2>
+        </div>
+
+        <div class="faq-grid">
+          <article class="faq-card">
+            <h3 data-i18n="faq1_q">How do I transfer my data to a new phone?</h3>
+            <p data-i18n="faq1_a">Because Steady never uploads your health history to a cloud server, transfers stay under your control. Open Settings → Data &amp; Reset, export a JSON backup file, and import it on your new phone or browser in seconds.</p>
+          </article>
+
+          <article class="faq-card">
+            <h3 data-i18n="faq2_q">Does it work on iPhone and Android without Telegram?</h3>
+            <p data-i18n="faq2_a">Yes. Steady works directly in Safari and Chrome as a lightweight web app (and can be added to your Home Screen like a native app). Telegram Mini App is completely optional.</p>
+          </article>
+
+          <article class="faq-card">
+            <h3 data-i18n="faq3_q">Which medications are supported? Can I pause a course?</h3>
+            <p data-i18n="faq3_a">Ozempic, Wegovy, Mounjaro, Zepbound, Saxenda, Rybelsus, plus custom medications with any weekly or daily schedule and custom dosage step. You can also pause and resume a course anytime after a doctor visit.</p>
+          </article>
+
+          <article class="faq-card">
+            <h3 data-i18n="faq4_q">Is Steady a medical device?</h3>
+            <p data-i18n="faq4_a">No. Steady is a personal self-tracking journal and is not a medical device. It does not diagnose, treat, or calculate medication doses, and the medication-level curve is an illustrative estimate only. Always follow your doctor's prescription.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Minimalist Footer -->
+  <footer>
+    <div class="wrap foot-inner">
+      <div>© 2026 Olshany Lab · Steady</div>
+      <div class="foot-links">
+        <a href="./privacy.html" data-i18n="foot_privacy">Privacy</a>
+        <a href="./support.html" data-i18n="foot_support">Support</a>
+        <a href="https://t.me/steady_glp_bot" target="_blank" rel="noopener">Telegram @steady_glp_bot</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const COPY = {
+        en: {
+          page_title: "Steady — Calm GLP-1 & Type 2 Diabetes Companion",
+          nav_pdf: "Doctor PDF",
+          nav_local: "Why local",
+          nav_pricing: "Pricing",
+          nav_faq: "FAQ",
+          nav_open: "Open Steady",
+          hero_kicker: "GLP-1 & Type 2 Diabetes Companion · 10 Languages",
+          hero_h1: "Calm tracking. Private by design.",
+          hero_sub: "Log weekly injections, follow dose-colored weight trends, monitor fasting glucose, and export a 1-page Doctor Visit PDF — strictly on your phone, with no account and no cloud.",
+          hero_cta_web: "Open Web App",
+          hero_cta_tg: "Open in Telegram",
+          hero_note: "No sign-up · Works in Safari & Chrome · 30 days full Pro free",
+          m_trends_kicker: "TRENDS",
+          m_unit_kg: "kg",
+          m_weight_by_dose: "Weight by dose",
+          m_all: "All",
+          m_d1: "0.25 mg",
+          m_d2: "0.5 mg",
+          m_d3: "1.0 mg",
+          m_goal_bmi: "Goal 22.0",
+          m_bmi_over: "Overweight",
+          m_glucose_lbl: "Fasting glucose",
+          m_unit_mmol: "mmol/L",
+          m_in_range: "In range",
+          m_today_date: "FRI, NOV 27",
+          m_today_title: "Today",
+          m_ozempic: "Ozempic · 1.0 mg",
+          d_mon: "Mon", d_tue: "Tue", d_wed: "Wed", d_thu: "Thu", d_fri: "Fri", d_sat: "Sat", d_sun: "Sun",
+          m_level_lbl: "Estimated level",
+          m_phase_peak: "Peak effect",
+          m_your_day: "Your day",
+          m_daily_goals: "Daily goals",
+          m_protein: "Protein",
+          m_protein_val: "92 / 110 g",
+          m_fiber: "Fiber",
+          m_fiber_val: "24 / 28 g",
+          m_water: "Water",
+          m_water_val: "1.8 / 2.2 L",
+          m_plan_kicker: "COURSE",
+          m_visit_title: "Doctor Visit",
+          m_pen_supply: "Pen supply",
+          m_doses_left: "3 of 4 doses",
+          m_refill_hint: "Refill reminder ready for calendar",
+          m_pdf_card: "1-Page PDF Report",
+          m_10_langs: "10 langs",
+          m_w_change: "Weight",
+          m_adh: "Adherence",
+          m_glucose_short: "Glucose TIR",
+          m_next_visit: "Next visit",
+          m_visit_date_short: "Dec 10",
+          m_share_pdf: "Share / Print PDF",
+          pdf_kicker: "DOCTOR VISIT PDF",
+          pdf_h2: "One clear sheet your doctor can read in 30 seconds.",
+          pdf_sub: "Instead of scrolling through phone screenshots during an appointment, hand over a structured single-page A4 or US Letter clinical summary.",
+          pdf_b1: "Complete overview on 1 page: dose-colored weight curve, glucose Time-in-Range, 8-week adherence, symptoms, and injection site map.",
+          pdf_b2: "10 report languages — generate the PDF in your doctor's language independently from your interface language.",
+          pdf_b3: "Built for clinic printers: high-contrast B/W preview mode with hatched bars that stay legible even on low toner.",
+          pdf_b4: "Native 1-tap Share Sheet on iPhone (AirPrint, Apple Mail, AirDrop, Files) and instant PDF download on desktop.",
+          a4_title: "Steady · Doctor Visit Summary",
+          a4_sub: "Ozempic 1.0 mg · A4 · 1 Page",
+          a4_patient: "Patient: ___________",
+          a4_date: "Visit: 10.12.2026",
+          a4_k1: "Progress",
+          a4_k1_v: "88.4 → 78.9 kg",
+          a4_k2: "Glucose",
+          a4_k2_v: "6.4 → 5.3 mmol/L",
+          a4_k3: "Adherence",
+          a4_k3_v: "7/8 on time",
+          a4_shots_h: "Recent injections & rotation",
+          a4_th_date: "Date",
+          a4_th_dose: "Dose",
+          a4_th_zone: "Site",
+          a4_r1_d: "Nov 20", a4_r1_ds: "1.0 mg", a4_r1_z: "Left abdomen",
+          a4_r2_d: "Nov 13", a4_r2_ds: "1.0 mg", a4_r2_z: "Right abdomen",
+          a4_r3_d: "Nov 6",  a4_r3_ds: "0.5 mg", a4_r3_z: "Left thigh",
+          a4_r4_d: "Oct 30", a4_r4_ds: "0.5 mg", a4_r4_z: "Right thigh",
+          cmp_kicker: "WHY LOCAL",
+          cmp_h2: "An honest look at how Steady compares.",
+          cmp_sub: "No dark-pattern paywalls, no mandatory accounts, and no health data uploaded to third-party clouds.",
+          cmp_th_feat: "Feature",
+          cmp_th_other: "Typical GLP-1 apps",
+          cmp_r1_l: "Account & cloud",
+          cmp_r1_s: "No sign-up — 100% local on your device with JSON backup",
+          cmp_r1_o: "Required account & cloud health servers",
+          cmp_r2_l: "Type 2 diabetes glucose",
+          cmp_r2_s: "Built-in glucose log (mmol/L & mg/dL) + Time-in-Range",
+          cmp_r2_o: "Weight-only or separate paid app",
+          cmp_r3_l: "Languages (UI + PDF)",
+          cmp_r3_s: "10 full languages for UI and independent Doctor PDF",
+          cmp_r3_o: "Usually English-only",
+          cmp_r4_l: "Honest pricing",
+          cmp_r4_s: "$1.99/mo · $11.99/yr · $19.99 Lifetime",
+          cmp_r4_o: "$7–$13/mo recurring subscription",
+          pr_kicker: "SIMPLE PRICING",
+          pr_h2: "Fair plans. No surprises.",
+          pr_sub: "Try everything free for 30 days. Unlock Pro via Telegram Stars or Crypto Pay whenever you are ready.",
+          pr_m_name: "Monthly",
+          pr_m_stars: "or 100 ⭐ · per month",
+          pr_m_desc: "Full access to Doctor PDF reports, full history trends, and all Pro features.",
+          pr_y_name: "Yearly",
+          pr_y_stars: "or 600 ⭐ · per year",
+          pr_y_desc: "Best value for an ongoing GLP-1 or T2D course — less than $1/month.",
+          pr_l_name: "Lifetime",
+          pr_l_stars: "or 1,000 ⭐ · one-time",
+          pr_l_desc: "Pay once, keep Steady Pro forever with no recurring charges.",
+          pr_cta: "Start 30 days free",
+          pr_foot: "Every new user gets 30 days of full Pro free — no credit card and no auto-billing. Core daily tracking remains free forever.",
+          faq_h2: "Common questions",
+          faq1_q: "How do I transfer my data to a new phone?",
+          faq1_a: "Because Steady never uploads your health history to a cloud server, transfers stay under your control. Open Settings → Data & Reset, export a JSON backup file, and import it on your new phone or browser in seconds.",
+          faq2_q: "Does it work on iPhone and Android without Telegram?",
+          faq2_a: "Yes. Steady works directly in Safari and Chrome as a lightweight web app (and can be added to your Home Screen like a native app). Telegram Mini App is completely optional.",
+          faq3_q: "Which medications are supported? Can I pause a course?",
+          faq3_a: "Ozempic, Wegovy, Mounjaro, Zepbound, Saxenda, Rybelsus, plus custom medications with any weekly or daily schedule and custom dosage step. You can also pause and resume a course anytime after a doctor visit.",
+          faq4_q: "Is Steady a medical device?",
+          faq4_a: "No. Steady is a personal self-tracking journal and is not a medical device. It does not diagnose, treat, or calculate medication doses, and the medication-level curve is an illustrative estimate only. Always follow your doctor's prescription.",
+          foot_privacy: "Privacy",
+          foot_support: "Support"
+        },
+        ru: {
+          page_title: "Steady — Спокойный трекер GLP-1 и диабета 2 типа",
+          nav_pdf: "PDF врачу",
+          nav_local: "Почему локально",
+          nav_pricing: "Цены",
+          nav_faq: "FAQ",
+          nav_open: "Открыть Steady",
+          hero_kicker: "Трекер GLP-1 и диабета 2 типа · 10 языков",
+          hero_h1: "Спокойный трекинг. Приватный по сути.",
+          hero_sub: "Отмечайте уколы, следите за графиком веса по дозам и уровнем глюкозы и готовьте 1-страничный PDF-отчёт для врача — строго на вашем телефоне, без аккаунта и облака.",
+          hero_cta_web: "Открыть веб-приложение",
+          hero_cta_tg: "Открыть в Telegram",
+          hero_note: "Без регистрации · Работает в Safari, Chrome и Telegram · 30 дней Pro бесплатно",
+          m_trends_kicker: "ТРЕНДЫ",
+          m_unit_kg: "кг",
+          m_weight_by_dose: "Вес по дозам",
+          m_all: "Всё",
+          m_d1: "0.25 мг",
+          m_d2: "0.5 мг",
+          m_d3: "1.0 мг",
+          m_goal_bmi: "Цель 22.0",
+          m_bmi_over: "Избыточный",
+          m_glucose_lbl: "Глюкоза натощак",
+          m_unit_mmol: "ммоль/л",
+          m_in_range: "В норме",
+          m_today_date: "ПТ, 27 НОЯБ.",
+          m_today_title: "Сегодня",
+          m_ozempic: "Ozempic · 1.0 мг",
+          d_mon: "Пн", d_tue: "Вт", d_wed: "Ср", d_thu: "Чт", d_fri: "Пт", d_sat: "Сб", d_sun: "Вс",
+          m_level_lbl: "Уровень препарата",
+          m_phase_peak: "Пик действия",
+          m_your_day: "Твой день",
+          m_daily_goals: "Дневные цели",
+          m_protein: "Белок",
+          m_protein_val: "92 / 110 г",
+          m_fiber: "Клетчатка",
+          m_fiber_val: "24 / 28 г",
+          m_water: "Вода",
+          m_water_val: "1.8 / 2.2 л",
+          m_plan_kicker: "КУРС",
+          m_visit_title: "Визит к врачу",
+          m_pen_supply: "Запас в ручке",
+          m_doses_left: "3 из 4 доз",
+          m_refill_hint: "Напоминание о рецепте для календаря",
+          m_pdf_card: "1-страничный PDF",
+          m_10_langs: "10 языков",
+          m_w_change: "Вес",
+          m_adh: "Регулярность",
+          m_glucose_short: "Глюкоза TIR",
+          m_next_visit: "Визит",
+          m_visit_date_short: "10 дек.",
+          m_share_pdf: "Поделиться / Печать PDF",
+          pdf_kicker: "PDF ДЛЯ ВРАЧА",
+          pdf_h2: "Один понятный лист, который врач прочитает за 30 секунд.",
+          pdf_sub: "Вместо того чтобы листать скриншоты на приёме, передайте врачу аккуратную одностраничную сводку формата A4 или US Letter.",
+          pdf_b1: "Вся картина на 1 странице: график веса по дозам, глюкоза в целевом диапазоне (TIR), регулярность за 8 недель, симптомы и карта зон инъекций.",
+          pdf_b2: "10 языков отчёта — язык PDF выбирается независимо от языка интерфейса приложения (удобно на приёме за границей).",
+          pdf_b3: "Готов к офисным принтерам: контрастный Ч/Б режим со штриховкой остаётся читаемым даже при слабом тонере.",
+          pdf_b4: "Нативное меню «Поделиться» на iPhone (AirPrint, Почта Apple, AirDrop, Файлы) и мгновенное скачивание .pdf на компьютере.",
+          a4_title: "Steady · Отчёт для визита к врачу",
+          a4_sub: "Ozempic 1.0 мг · A4 · 1 страница",
+          a4_patient: "Пациент: ___________",
+          a4_date: "Визит: 10.12.2026",
+          a4_k1: "Прогресс",
+          a4_k1_v: "88.4 → 78.9 кг",
+          a4_k2: "Глюкоза",
+          a4_k2_v: "6.4 → 5.3 ммоль/л",
+          a4_k3: "Регулярность",
+          a4_k3_v: "7/8 в срок",
+          a4_shots_h: "Последние уколы и ротация",
+          a4_th_date: "Дата",
+          a4_th_dose: "Доза",
+          a4_th_zone: "Зона",
+          a4_r1_d: "20 нояб.", a4_r1_ds: "1.0 мг", a4_r1_z: "Левый живот",
+          a4_r2_d: "13 нояб.", a4_r2_ds: "1.0 мг", a4_r2_z: "Правый живот",
+          a4_r3_d: "6 нояб.",  a4_r3_ds: "0.5 мг", a4_r3_z: "Левое бедро",
+          a4_r4_d: "30 окт.",  a4_r4_ds: "0.5 мг", a4_r4_z: "Правое бедро",
+          cmp_kicker: "ПОЧЕМУ ЛОКАЛЬНО",
+          cmp_h2: "Честное сравнение Steady с обычными трекерами.",
+          cmp_sub: "Без навязчивых подписок, без обязательной регистрации и без выгрузки данных о здоровье в чужое облако.",
+          cmp_th_feat: "Параметр",
+          cmp_th_other: "Обычные GLP-1 приложения",
+          cmp_r1_l: "Аккаунт и облако",
+          cmp_r1_s: "Без аккаунта — 100% на устройстве с JSON-бэкапом",
+          cmp_r1_o: "Обязательный аккаунт и облачные серверы",
+          cmp_r2_l: "Глюкоза при СД 2 типа",
+          cmp_r2_s: "Встроенный дневник глюкозы (ммоль/л и mg/dL) + TIR",
+          cmp_r2_o: "Только вес или отдельное платное приложение",
+          cmp_r3_l: "Языки (интерфейс + PDF)",
+          cmp_r3_s: "10 языков интерфейса и независимый язык PDF для врача",
+          cmp_r3_o: "Чаще всего только английский",
+          cmp_r4_l: "Честная цена",
+          cmp_r4_s: "$1.99/мес · $11.99/год · $19.99 Навсегда",
+          cmp_r4_o: "$7–$13/мес по автопродлеваемой подписке",
+          pr_kicker: "ПРОСТЫЕ ЦЕНЫ",
+          pr_h2: "Понятные тарифы без скрытых условий.",
+          pr_sub: "Попробуйте все возможности бесплатно 30 дней. Оплата доступна через Telegram Stars или Crypto Pay.",
+          pr_m_name: "Месяц",
+          pr_m_stars: "или 100 ⭐ · в месяц",
+          pr_m_desc: "Полный доступ к PDF-отчётам врачу, всей истории графиков и функциям Pro.",
+          pr_y_name: "Год",
+          pr_y_stars: "или 600 ⭐ · в год",
+          pr_y_desc: "Оптимально для длительного курса GLP-1 или контроля диабета — меньше $1 в месяц.",
+          pr_l_name: "Навсегда",
+          pr_l_stars: "или 1 000 ⭐ · один раз",
+          pr_l_desc: "Разовая оплата без подписок и повторных списаний.",
+          pr_cta: "30 дней бесплатно",
+          pr_foot: "30 дней полного доступа Pro бесплатно без привязки карты и автосписаний. Базовый трекинг остаётся бесплатным навсегда.",
+          faq_h2: "Частые вопросы",
+          faq1_q: "Как перенести данные на новый телефон?",
+          faq1_a: "Steady не хранит вашу историю в облаке — вы полностью управляете своими данными. Откройте «Настройки → Данные и сброс», экспортируйте JSON-файл резервной копии и импортируйте его на новом устройстве за пару секунд.",
+          faq2_q: "Работает ли приложение на iPhone и Android без Telegram?",
+          faq2_a: "Да. Steady работает прямо в Safari и Chrome как лёгкое веб-приложение (можно добавить на экран «Домой» как обычную иконку). Версия в Telegram Mini App полностью опциональна.",
+          faq3_q: "Какие препараты поддерживаются? Можно ли поставить курс на паузу?",
+          faq3_a: "Ozempic, Wegovy, Mounjaro, Zepbound, Saxenda, Rybelsus, а также свой препарат с любым графиком (раз в неделю или ежедневно) и шагом дозы. После визита к врачу курс можно поставить на паузу и возобновить в любой момент.",
+          faq4_q: "Является ли Steady медицинским устройством?",
+          faq4_a: "Нет. Steady — личный дневник самоконтроля и не является медицинским изделием. Приложение не ставит диагнозы, не лечит и не рассчитывает дозы, а кривая уровня препарата носит ориентировочный характер. Всегда следуйте назначению врача.",
+          foot_privacy: "Приватность",
+          foot_support: "Поддержка"
+        }
+      };
+
+      function applyLang(lang) {
+        const code = lang === "ru" ? "ru" : "en";
+        const dict = COPY[code];
+        document.documentElement.lang = code;
+        document.title = dict.page_title;
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+          const key = el.getAttribute("data-i18n");
+          if (dict[key] != null) el.textContent = dict[key];
+        });
+        const enBtn = document.getElementById("langEnBtn");
+        const ruBtn = document.getElementById("langRuBtn");
+        if (enBtn) enBtn.classList.toggle("is-active", code === "en");
+        if (ruBtn) ruBtn.classList.toggle("is-active", code === "ru");
+      }
+
+      document.querySelectorAll("[data-set-lang]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          applyLang(btn.getAttribute("data-set-lang"));
+        });
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = (params.get("lang") || "").toLowerCase();
+      const autoLang = (navigator.language || "en").toLowerCase().indexOf("ru") === 0 ? "ru" : "en";
+      applyLang(urlLang === "ru" || urlLang === "en" ? urlLang : autoLang);
+    })();
+  </script>
+</body>
+</html>
